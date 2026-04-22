@@ -4,13 +4,14 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Upsert
 import com.example.transporttracker.data.local.entity.TripEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TripDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertTrip(trip: TripEntity): Long
 
     @Query("SELECT * FROM trips ORDER BY startTime DESC")

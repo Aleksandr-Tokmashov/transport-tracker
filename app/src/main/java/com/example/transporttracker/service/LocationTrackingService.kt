@@ -11,6 +11,8 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.transporttracker.R
 import com.example.transporttracker.data.local.entity.GpsPointEntity
+import com.example.transporttracker.data.local.entity.TripEntity
+import com.example.transporttracker.data.repository.TransportRepository
 import com.example.transporttracker.domain.usecase.TripAnalyzer
 import com.example.transporttracker.utils.AppContainer
 import com.example.transporttracker.utils.Constants
@@ -18,10 +20,18 @@ import com.example.transporttracker.utils.LocationUtils
 import com.google.android.gms.location.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 class LocationTrackingService : Service() {
 
+    private val serviceScope =
+        CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    private lateinit var repository: TransportRepository
+
+    private var currentTripId: Long? = null
     private lateinit var fusedLocationClient:
             FusedLocationProviderClient
 
@@ -29,8 +39,6 @@ class LocationTrackingService : Service() {
             LocationCallback
 
     private val analyzer = TripAnalyzer()
-
-    // Trip state
 
     private var isTripActive = false
 
@@ -45,8 +53,6 @@ class LocationTrackingService : Service() {
 
     private var gpsLostDuration = 0L
 
-    // Previous location for manual speed calculation
-
     private var lastLocation: Location? = null
 
     override fun onCreate() {
@@ -55,6 +61,9 @@ class LocationTrackingService : Service() {
         fusedLocationClient =
             LocationServices
                 .getFusedLocationProviderClient(this)
+
+        repository =
+            AppContainer.provideRepository(applicationContext)
 
         createNotificationChannel()
 
@@ -153,14 +162,12 @@ class LocationTrackingService : Service() {
             latitude = location.latitude,
             longitude = location.longitude,
             speed = speed,
-            accuracy = location.accuracy
+            accuracy = location.accuracy,
+            tripId = currentTripId
         )
 
-        CoroutineScope(Dispatchers.IO).launch {
-
-            AppContainer
-                .provideRepository(applicationContext)
-                .insertGpsPoint(point)
+        serviceScope.launch {
+            repository.insertGpsPoint(point)
         }
     }
 
@@ -194,8 +201,6 @@ class LocationTrackingService : Service() {
         timestamp: Long
     ) {
 
-        // Start trip
-
         if (speed > TripAnalyzer.START_SPEED) {
 
             if (!isTripActive) {
@@ -217,6 +222,23 @@ class LocationTrackingService : Service() {
 
                     isTripActive = true
 
+                    tripStartTime = timestamp
+
+                    serviceScope.launch {
+
+                        currentTripId =
+                            repository.insertTrip(
+                                TripEntity(
+                                    startTime = timestamp,
+                                    endTime = timestamp,
+                                    transportType = "UNKNOWN",
+                                    averageSpeed = 0f,
+                                    dayType = "",
+                                    timeBin = ""
+                                )
+                            )
+                    }
+
                     Log.d(
                         "TRIP_DEBUG",
                         "TRIP ACTIVE"
@@ -228,8 +250,6 @@ class LocationTrackingService : Service() {
 
             speedSamples.add(speed)
         }
-
-        // Stop trip
 
         else if (isTripActive) {
 
@@ -269,15 +289,18 @@ class LocationTrackingService : Service() {
                 gpsLostDuration = gpsLostDuration
             )
 
-        CoroutineScope(Dispatchers.IO).launch {
+        serviceScope.launch {
 
-            AppContainer
-                .provideRepository(applicationContext)
-                .insertTrip(trip)
+            currentTripId?.let { tripId ->
+
+                repository.insertTrip(
+                    trip.copy(id = tripId)
+                )
+            }
 
             Log.d(
                 "TRIP_DEBUG",
-                "Trip saved to database"
+                "Trip updated in database"
             )
         }
 
@@ -297,6 +320,8 @@ class LocationTrackingService : Service() {
         gpsLostDuration = 0L
 
         speedSamples.clear()
+
+        currentTripId = null
     }
 
     private fun createNotification():
@@ -335,6 +360,8 @@ class LocationTrackingService : Service() {
 
         fusedLocationClient
             .removeLocationUpdates(locationCallback)
+
+        serviceScope.cancel()
     }
 
     override fun onBind(
