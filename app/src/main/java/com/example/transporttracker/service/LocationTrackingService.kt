@@ -14,6 +14,8 @@ import com.example.transporttracker.data.local.entity.GpsPointEntity
 import com.example.transporttracker.data.local.entity.TripEntity
 import com.example.transporttracker.data.repository.TransportRepository
 import com.example.transporttracker.domain.usecase.TripAnalyzer
+import com.example.transporttracker.domain.usecase.TripDetector
+import com.example.transporttracker.domain.usecase.TripEvent
 import com.example.transporttracker.utils.AppContainer
 import com.example.transporttracker.utils.Constants
 import com.example.transporttracker.utils.LocationUtils
@@ -40,11 +42,9 @@ class LocationTrackingService : Service() {
 
     private val analyzer = TripAnalyzer()
 
-    private var isTripActive = false
+    private val tripDetector = TripDetector()
 
     private var tripStartTime = 0L
-
-    private var lastMovingTime = 0L
 
     private val speedSamples =
         mutableListOf<Float>()
@@ -99,7 +99,6 @@ class LocationTrackingService : Service() {
                         val timestamp =
                             System.currentTimeMillis()
 
-                        // Manual speed calculation
 
                         val speed =
                             if (lastLocation != null) {
@@ -129,10 +128,36 @@ class LocationTrackingService : Service() {
 
                         handleGpsSignal(location)
 
-                        handleTripLogic(
-                            speed = speed,
-                            timestamp = timestamp
-                        )
+                        val event =
+                            tripDetector.process(
+                                speedKmh = speed * 3.6f,
+                                timestamp = timestamp
+                            )
+
+                        when (event) {
+
+                            TripEvent.TripStarted -> {
+
+                                Log.d(
+                                    "TRIP_DEBUG",
+                                    "TRIP STARTED"
+                                )
+
+                                startTrip(timestamp)
+                            }
+
+                            TripEvent.TripEnded -> {
+
+                                Log.d(
+                                    "TRIP_DEBUG",
+                                    "TRIP ENDED"
+                                )
+
+                                finishTrip(timestamp)
+                            }
+
+                            null -> Unit
+                        }
                     }
                 }
             }
@@ -148,6 +173,30 @@ class LocationTrackingService : Service() {
         } catch (e: SecurityException) {
 
             e.printStackTrace()
+        }
+    }
+
+    private fun startTrip(
+        startTime: Long
+    ) {
+
+        tripStartTime = startTime
+
+        speedSamples.clear()
+
+        serviceScope.launch {
+
+            currentTripId =
+                repository.insertTrip(
+                    TripEntity(
+                        startTime = startTime,
+                        endTime = startTime,
+                        transportType = "UNKNOWN",
+                        averageSpeed = 0f,
+                        dayType = "",
+                        timeBin = ""
+                    )
+                )
         }
     }
 
@@ -196,78 +245,6 @@ class LocationTrackingService : Service() {
         }
     }
 
-    private fun handleTripLogic(
-        speed: Float,
-        timestamp: Long
-    ) {
-
-        if (speed > TripAnalyzer.START_SPEED) {
-
-            if (!isTripActive) {
-
-                if (tripStartTime == 0L) {
-
-                    tripStartTime = timestamp
-
-                    Log.d(
-                        "TRIP_DEBUG",
-                        "Potential trip started"
-                    )
-                }
-
-                if (
-                    timestamp - tripStartTime >
-                    TripAnalyzer.MIN_TRIP_DURATION
-                ) {
-
-                    isTripActive = true
-
-                    tripStartTime = timestamp
-
-                    serviceScope.launch {
-
-                        currentTripId =
-                            repository.insertTrip(
-                                TripEntity(
-                                    startTime = timestamp,
-                                    endTime = timestamp,
-                                    transportType = "UNKNOWN",
-                                    averageSpeed = 0f,
-                                    dayType = "",
-                                    timeBin = ""
-                                )
-                            )
-                    }
-
-                    Log.d(
-                        "TRIP_DEBUG",
-                        "TRIP ACTIVE"
-                    )
-                }
-            }
-
-            lastMovingTime = timestamp
-
-            speedSamples.add(speed)
-        }
-
-        else if (isTripActive) {
-
-            if (
-                timestamp - lastMovingTime >
-                TripAnalyzer.STOP_DURATION
-            ) {
-
-                Log.d(
-                    "TRIP_DEBUG",
-                    "TRIP FINISHED"
-                )
-
-                finishTrip(timestamp)
-            }
-        }
-    }
-
     private fun finishTrip(
         endTime: Long
     ) {
@@ -308,12 +285,6 @@ class LocationTrackingService : Service() {
     }
 
     private fun resetTrip() {
-
-        isTripActive = false
-
-        tripStartTime = 0L
-
-        lastMovingTime = 0L
 
         gpsLostStart = 0L
 
