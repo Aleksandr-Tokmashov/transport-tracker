@@ -17,7 +17,7 @@ class TripDetector {
 
     private var isTripActive = false
 
-    private var potentialStartTime = 0L
+    private var potentialStartTime = -1L
 
     private var lastMovingTime = 0L
 
@@ -26,20 +26,19 @@ class TripDetector {
         timestamp: Long
     ): TripEvent? {
 
-        // Potential trip start
+        // MOVING
 
         if (speedKmh > START_SPEED) {
 
             if (!isTripActive) {
 
-                if (potentialStartTime == 0L) {
+                if (potentialStartTime == -1L) {
 
-                    potentialStartTime =
-                        timestamp
+                    potentialStartTime = timestamp
                 }
 
                 if (
-                    timestamp - potentialStartTime >
+                    timestamp - potentialStartTime >=
                     MIN_TRIP_DURATION
                 ) {
 
@@ -49,30 +48,40 @@ class TripDetector {
 
                     return TripEvent.TripStarted
                 }
-            }
 
-            lastMovingTime = timestamp
+            } else {
+
+                lastMovingTime = timestamp
+            }
         }
 
-        // Trip stop
+        // NOT MOVING
 
-        if (
-            isTripActive &&
-            speedKmh < STOP_SPEED
-        ) {
+        else {
+
+            if (!isTripActive) {
+
+                potentialStartTime = -1L
+            }
 
             if (
-                timestamp - lastMovingTime >
-                STOP_DURATION
+                isTripActive &&
+                speedKmh < STOP_SPEED
             ) {
 
-                isTripActive = false
+                if (
+                    timestamp - lastMovingTime >=
+                    STOP_DURATION
+                ) {
 
-                potentialStartTime = 0L
+                    isTripActive = false
 
-                lastMovingTime = 0L
+                    potentialStartTime = -1L
 
-                return TripEvent.TripEnded
+                    lastMovingTime = 0L
+
+                    return TripEvent.TripEnded
+                }
             }
         }
 
