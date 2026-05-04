@@ -3,12 +3,16 @@ package com.example.transporttracker.ui.navigation
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.*
 import com.example.transporttracker.ui.analytics.AnalyticsScreen
 import com.example.transporttracker.ui.home.HomeRoute
 import com.example.transporttracker.ui.home.HomeScreen
 import com.example.transporttracker.ui.trips.TripsScreen
+import com.example.transporttracker.ui.trips.TripsViewModel
+import com.example.transporttracker.utils.AppContainer
 
 @Composable
 fun AppNavigation() {
@@ -54,7 +58,20 @@ fun AppNavigation() {
             }
 
             composable(Screen.Trips.route) {
-                TripsScreen()
+
+                val repository =
+                    AppContainer.provideRepository(
+                        LocalContext.current
+                    )
+
+                val viewModel =
+                    remember {
+                        TripsViewModel(repository)
+                    }
+
+                TripsScreen(
+                    viewModel = viewModel
+                )
             }
 
             composable(Screen.Analytics.route) {

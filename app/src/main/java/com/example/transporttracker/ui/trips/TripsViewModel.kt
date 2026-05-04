@@ -1,39 +1,29 @@
 package com.example.transporttracker.ui.trips
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.transporttracker.domain.model.Trip
-import com.example.transporttracker.utils.AppContainer
-import com.example.transporttracker.utils.toDomain
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
+import com.example.transporttracker.data.repository.TransportRepository
+import com.example.transporttracker.utils.TripUiMapper
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
 class TripsViewModel(
-    application: Application
-) : AndroidViewModel(application) {
+    repository: TransportRepository
+) : ViewModel() {
 
-    private val repository =
-        AppContainer.provideRepository(application)
+    val trips = repository
+        .getAllTrips()
+        .map { trips ->
 
-    private val _trips =
-        MutableStateFlow<List<Trip>>(emptyList())
-
-    val trips: StateFlow<List<Trip>> =
-        _trips
-
-    init {
-
-        viewModelScope.launch {
-
-            repository.getAllTrips().collect { entities ->
-
-                _trips.value =
-                    entities.map {
-                        it.toDomain()
-                    }
+            trips.map {
+                TripUiMapper.map(it)
             }
         }
-    }
+        .stateIn(
+            scope = viewModelScope,
+            started =
+                SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 }
