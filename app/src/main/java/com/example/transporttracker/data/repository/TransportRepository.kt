@@ -37,4 +37,11 @@ class TransportRepository(
 
     fun getAllPatterns() =
         patternDao.getAllPatterns()
+
+    suspend fun updateTrip(
+        trip: TripEntity
+    ) {
+
+        tripDao.updateTrip(trip)
+    }
 }

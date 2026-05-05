@@ -1,49 +1,54 @@
 package com.example.transporttracker.ui.analytics
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.transporttracker.domain.model.AnalyticsPattern
+import com.example.transporttracker.data.repository.TransportRepository
 import com.example.transporttracker.domain.usecase.AnalyticsGenerator
-import com.example.transporttracker.utils.AppContainer
-import com.example.transporttracker.utils.toDomain
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
+import com.example.transporttracker.utils.TripMapper
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
 class AnalyticsViewModel(
-    application: Application
-) : AndroidViewModel(application) {
-
-    private val repository =
-        AppContainer.provideRepository(application)
+    repository: TransportRepository
+) : ViewModel() {
 
     private val generator =
         AnalyticsGenerator()
 
-    private val _patterns =
-        MutableStateFlow<List<AnalyticsPattern>>(
-            emptyList()
-        )
+    val uiState = repository
+        .getAllTrips()
+        .map { entities ->
 
-    val patterns:
-            StateFlow<List<AnalyticsPattern>> =
-        _patterns
+            val trips =
+                entities.map {
+                    TripMapper.map(it)
+                }
 
-    init {
+            val patterns =
+                generator.generatePatterns(
+                    trips
+                )
 
-        viewModelScope.launch {
+            AnalyticsUiState(
 
-            repository.getAllTrips().collect { entities ->
+                insights =
+                    patterns.map { it.text },
 
-                val trips =
-                    entities.map {
-                        it.toDomain()
-                    }
+                totalTrips =
+                    trips.size,
 
-                _patterns.value =
-                    generator.generatePatterns(trips)
-            }
+                mostUsedTransport =
+                    generator.getMostUsedTransport(
+                        trips
+                    )
+            )
         }
-    }
+        .stateIn(
+            scope = viewModelScope,
+            started =
+                SharingStarted.WhileSubscribed(5000),
+            initialValue =
+                AnalyticsUiState()
+        )
 }

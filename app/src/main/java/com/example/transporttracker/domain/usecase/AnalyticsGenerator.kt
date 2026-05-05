@@ -83,4 +83,16 @@ class AnalyticsGenerator {
 
         return "$dayText $timeText вы чаще используете $transportText"
     }
+
+    fun getMostUsedTransport(
+        trips: List<Trip>
+    ): String {
+
+        return trips
+            .groupBy { it.transportType }
+            .maxByOrNull { it.value.size }
+            ?.key
+            ?.name
+            ?: "UNKNOWN"
+    }
 }

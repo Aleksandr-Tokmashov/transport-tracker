@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.*
 import com.example.transporttracker.ui.analytics.AnalyticsScreen
+import com.example.transporttracker.ui.analytics.AnalyticsViewModel
 import com.example.transporttracker.ui.home.HomeRoute
 import com.example.transporttracker.ui.home.HomeScreen
 import com.example.transporttracker.ui.trips.TripsScreen
@@ -75,7 +76,20 @@ fun AppNavigation() {
             }
 
             composable(Screen.Analytics.route) {
-                AnalyticsScreen()
+
+                val repository =
+                    AppContainer.provideRepository(
+                        LocalContext.current
+                    )
+
+                val viewModel =
+                    remember {
+                        AnalyticsViewModel(repository)
+                    }
+
+                AnalyticsScreen(
+                    viewModel = viewModel
+                )
             }
         }
     }

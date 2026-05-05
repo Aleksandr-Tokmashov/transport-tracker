@@ -26,11 +26,11 @@ class TripDetector {
         timestamp: Long
     ): TripEvent? {
 
-        // MOVING
+        // TRIP NOT ACTIVE YET
 
-        if (speedKmh > START_SPEED) {
+        if (!isTripActive) {
 
-            if (!isTripActive) {
+            if (speedKmh > START_SPEED) {
 
                 if (potentialStartTime == -1L) {
 
@@ -51,38 +51,35 @@ class TripDetector {
 
             } else {
 
-                lastMovingTime = timestamp
-            }
-        }
-
-        // NOT MOVING
-
-        else {
-
-            if (!isTripActive) {
-
                 potentialStartTime = -1L
             }
 
-            if (
-                isTripActive &&
-                speedKmh < STOP_SPEED
-            ) {
+            return null
+        }
 
-                if (
-                    timestamp - lastMovingTime >=
-                    STOP_DURATION
-                ) {
+        // TRIP ACTIVE
 
-                    isTripActive = false
+        if (speedKmh > STOP_SPEED) {
 
-                    potentialStartTime = -1L
+            lastMovingTime = timestamp
 
-                    lastMovingTime = 0L
+            return null
+        }
 
-                    return TripEvent.TripEnded
-                }
-            }
+        // USER STOPPED
+
+        if (
+            timestamp - lastMovingTime >=
+            STOP_DURATION
+        ) {
+
+            isTripActive = false
+
+            potentialStartTime = -1L
+
+            lastMovingTime = 0L
+
+            return TripEvent.TripEnded
         }
 
         return null

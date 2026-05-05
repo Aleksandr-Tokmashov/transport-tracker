@@ -78,22 +78,22 @@ class TripAnalyzer {
         startTime: Long,
         endTime: Long,
         averageSpeed: Float,
-        gpsLostDuration: Long
+        gpsLostDuration: Long,
+        dayType: String,
+        timeBin: String
     ): TripEntity {
-
-        val transport =
-            determineTransportType(
-                averageSpeed,
-                gpsLostDuration
-            )
 
         return TripEntity(
             startTime = startTime,
             endTime = endTime,
-            transportType = transport.name,
+            transportType =
+                determineTransportType(
+                    averageSpeed = averageSpeed,
+                    gpsLostDuration = gpsLostDuration
+                ).name,
             averageSpeed = averageSpeed,
-            dayType = getDayType(startTime).name,
-            timeBin = getTimeBin(startTime).name
+            dayType = dayType,
+            timeBin = timeBin
         )
     }
 }
