@@ -4,5 +4,6 @@ enum class TransportType {
     BUS,
     METRO,
     TRAM,
-    UNKNOWN
+    UNKNOWN,
+    WALK
 }

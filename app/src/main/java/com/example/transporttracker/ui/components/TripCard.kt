@@ -3,7 +3,9 @@ package com.example.transporttracker.ui.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -31,26 +33,20 @@ fun TripCard(
         )
     ) {
 
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement =
-                Arrangement.spacedBy(8.dp)
-        ) {
+        Column {
 
             Text(
                 text = trip.transportType,
-                style =
-                    MaterialTheme
-                        .typography
-                        .titleMedium
+                style = MaterialTheme.typography.titleMedium
             )
 
-            Text(
-                text = "Начало: ${trip.startTime}"
-            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(text = "Дата: ${trip.date}")
 
             Text(
-                text = "Конец: ${trip.endTime}"
+                text =
+                    "${trip.startTime} - ${trip.endTime}"
             )
 
             Row(
@@ -60,8 +56,7 @@ fun TripCard(
             ) {
 
                 Text(
-                    text =
-                        "Длительность: ${trip.duration}"
+                    text = trip.duration
                 )
 
                 Text(

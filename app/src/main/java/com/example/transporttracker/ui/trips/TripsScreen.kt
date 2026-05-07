@@ -10,21 +10,26 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.transporttracker.ui.components.TripCard
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.Alignment
 
 @Composable
 fun TripsScreen(
-    viewModel: TripsViewModel
+    trips: List<TripUiState>
 ) {
-
-    val trips by viewModel
-        .trips
-        .collectAsState()
 
     if (trips.isEmpty()) {
 
-        Text(
-            text = "Поездок пока нет"
-        )
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+
+            Text(
+                text = "Поездок пока нет"
+            )
+        }
 
         return
     }
@@ -33,7 +38,10 @@ fun TripsScreen(
         modifier = Modifier.fillMaxSize()
     ) {
 
-        items(trips) { trip ->
+        items(
+            items = trips,
+            key = { it.id }
+        ) { trip ->
 
             TripCard(
                 trip = trip

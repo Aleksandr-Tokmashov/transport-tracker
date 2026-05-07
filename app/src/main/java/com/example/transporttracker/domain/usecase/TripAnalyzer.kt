@@ -22,20 +22,27 @@ class TripAnalyzer {
         gpsLostDuration: Long
     ): TransportType {
 
-        if (
+        val speedKmh = averageSpeed * 3.6f
+
+        return when {
+
             gpsLostDuration > 120_000L &&
-            averageSpeed > 5.55f
-        ) {
-            return TransportType.METRO
-        }
+                    speedKmh > 15f -> {
+                TransportType.METRO
+            }
 
-        if (
-            averageSpeed in 2.7f..16.6f
-        ) {
-            return TransportType.BUS
-        }
+            speedKmh < 7f -> {
+                TransportType.WALK
+            }
 
-        return TransportType.UNKNOWN
+            speedKmh in 7f..40f -> {
+                TransportType.BUS
+            }
+
+            else -> {
+                TransportType.UNKNOWN
+            }
+        }
     }
 
     fun getDayType(timestamp: Long): DayType {
@@ -79,21 +86,27 @@ class TripAnalyzer {
         endTime: Long,
         averageSpeed: Float,
         gpsLostDuration: Long,
-        dayType: String,
-        timeBin: String
+        dayType: DayType,
+        timeBin: TimeBin
     ): TripEntity {
 
         return TripEntity(
+
             startTime = startTime,
+
             endTime = endTime,
+
             transportType =
                 determineTransportType(
                     averageSpeed = averageSpeed,
                     gpsLostDuration = gpsLostDuration
                 ).name,
+
             averageSpeed = averageSpeed,
-            dayType = dayType,
-            timeBin = timeBin
+
+            dayType = dayType.name,
+
+            timeBin = timeBin.name
         )
     }
 }

@@ -6,6 +6,10 @@ import com.example.transporttracker.data.local.dao.TripDao
 import com.example.transporttracker.data.local.entity.GpsPointEntity
 import com.example.transporttracker.data.local.entity.PatternEntity
 import com.example.transporttracker.data.local.entity.TripEntity
+import com.example.transporttracker.domain.model.Trip
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import com.example.transporttracker.utils.TripMapper
 
 class TransportRepository(
 
@@ -25,8 +29,17 @@ class TransportRepository(
         return tripDao.insertTrip(trip)
     }
 
-    fun getAllTrips() =
-        tripDao.getAllTrips()
+    fun getAllTrips(): Flow<List<Trip>> {
+
+        return tripDao
+            .getAllTrips()
+            .map { entities ->
+
+                entities.map { entity ->
+                    TripMapper.map(entity)
+                }
+            }
+    }
 
     fun getTripsCount() =
         tripDao.getTripsCount()

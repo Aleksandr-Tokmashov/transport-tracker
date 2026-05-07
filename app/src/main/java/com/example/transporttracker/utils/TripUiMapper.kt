@@ -2,6 +2,7 @@ package com.example.transporttracker.utils
 
 import android.annotation.SuppressLint
 import com.example.transporttracker.data.local.entity.TripEntity
+import com.example.transporttracker.domain.model.Trip
 import com.example.transporttracker.ui.trips.TripUiState
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -10,57 +11,42 @@ import java.util.concurrent.TimeUnit
 
 object TripUiMapper {
 
-    @SuppressLint("ConstantLocale")
-    private val dateFormatter =
-        SimpleDateFormat(
-            "dd.MM.yyyy",
-            Locale.getDefault()
-        )
-
-    @SuppressLint("ConstantLocale")
-    private val timeFormatter =
-        SimpleDateFormat(
-            "HH:mm",
-            Locale.getDefault()
-        )
-
     fun map(
-        trip: TripEntity
+        trip: Trip
     ): TripUiState {
-
-        val durationMillis =
-            trip.endTime - trip.startTime
-
-        val minutes =
-            TimeUnit.MILLISECONDS.toMinutes(
-                durationMillis
-            )
 
         return TripUiState(
 
             id = trip.id,
 
             date =
-                dateFormatter.format(
-                    Date(trip.startTime)
+                TripFormatter.formatDate(
+                    trip.startTime
                 ),
 
             startTime =
-                timeFormatter.format(
-                    Date(trip.startTime)
+                TripFormatter.formatTimeOnly(
+                    trip.startTime
                 ),
 
             endTime =
-                timeFormatter.format(
-                    Date(trip.endTime)
+                TripFormatter.formatTimeOnly(
+                    trip.endTime
                 ),
 
-            duration = "$minutes min",
+            duration =
+                TripFormatter.formatDuration(
+                    trip.startTime,
+                    trip.endTime
+                ),
 
-            transportType = trip.transportType,
+            transportType =
+                trip.transportType.name,
 
             averageSpeed =
-                "${trip.averageSpeed.toInt()} km/h"
+                TripFormatter.formatSpeed(
+                    trip.averageSpeed
+                )
         )
     }
 }

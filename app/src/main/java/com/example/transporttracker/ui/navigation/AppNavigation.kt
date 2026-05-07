@@ -3,9 +3,11 @@ package com.example.transporttracker.ui.navigation
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.*
 import com.example.transporttracker.ui.analytics.AnalyticsScreen
 import com.example.transporttracker.ui.analytics.AnalyticsViewModel
@@ -70,8 +72,12 @@ fun AppNavigation() {
                         TripsViewModel(repository)
                     }
 
+                val trips by viewModel
+                    .trips
+                    .collectAsStateWithLifecycle()
+
                 TripsScreen(
-                    viewModel = viewModel
+                    trips = trips
                 )
             }
 
@@ -87,8 +93,12 @@ fun AppNavigation() {
                         AnalyticsViewModel(repository)
                     }
 
+                val state by viewModel
+                    .uiState
+                    .collectAsStateWithLifecycle()
+
                 AnalyticsScreen(
-                    viewModel = viewModel
+                    state = state
                 )
             }
         }

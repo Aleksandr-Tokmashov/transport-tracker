@@ -8,9 +8,15 @@ import java.util.concurrent.TimeUnit
 
 object TripFormatter {
 
-    private val dateFormat =
+    private val dateFormatter =
         SimpleDateFormat(
-            "dd.MM.yyyy HH:mm",
+            "dd.MM.yyyy",
+            Locale.getDefault()
+        )
+
+    private val timeFormatter =
+        SimpleDateFormat(
+            "HH:mm",
             Locale.getDefault()
         )
 
@@ -18,7 +24,16 @@ object TripFormatter {
         timestamp: Long
     ): String {
 
-        return dateFormat.format(
+        return dateFormatter.format(
+            Date(timestamp)
+        )
+    }
+
+    fun formatTimeOnly(
+        timestamp: Long
+    ): String {
+
+        return timeFormatter.format(
             Date(timestamp)
         )
     }
@@ -35,14 +50,7 @@ object TripFormatter {
         val minutes =
             TimeUnit.MILLISECONDS.toMinutes(duration)
 
-        val seconds =
-            TimeUnit.MILLISECONDS.toSeconds(duration) % 60
-
-        return String.format(
-            "%02d:%02d",
-            minutes,
-            seconds
-        )
+        return "$minutes min"
     }
 
     @SuppressLint("DefaultLocale")

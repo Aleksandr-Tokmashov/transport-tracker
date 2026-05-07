@@ -18,12 +18,7 @@ class AnalyticsViewModel(
 
     val uiState = repository
         .getAllTrips()
-        .map { entities ->
-
-            val trips =
-                entities.map {
-                    TripMapper.map(it)
-                }
+        .map { trips ->
 
             val patterns =
                 generator.generatePatterns(

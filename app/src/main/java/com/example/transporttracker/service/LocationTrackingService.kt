@@ -19,7 +19,6 @@ import com.example.transporttracker.domain.usecase.TripEvent
 import com.example.transporttracker.utils.AppContainer
 import com.example.transporttracker.utils.Constants
 import com.example.transporttracker.utils.LocationUtils
-import com.example.transporttracker.utils.TripMetadata
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -288,12 +287,12 @@ class LocationTrackingService : Service() {
             }
 
         val dayType =
-            TripMetadata.getDayType(
+            analyzer.getDayType(
                 tripStartTime
             )
 
         val timeBin =
-            TripMetadata.getTimeBin(
+            analyzer.getTimeBin(
                 tripStartTime
             )
 
