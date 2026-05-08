@@ -13,12 +13,15 @@ import com.example.transporttracker.R
 import com.example.transporttracker.data.local.entity.GpsPointEntity
 import com.example.transporttracker.data.local.entity.TripEntity
 import com.example.transporttracker.data.repository.TransportRepository
+import com.example.transporttracker.domain.model.Stop
+import com.example.transporttracker.domain.usecase.StopMatcher
 import com.example.transporttracker.domain.usecase.TripAnalyzer
 import com.example.transporttracker.domain.usecase.TripDetector
 import com.example.transporttracker.domain.usecase.TripEvent
 import com.example.transporttracker.utils.AppContainer
 import com.example.transporttracker.utils.Constants
 import com.example.transporttracker.utils.LocationUtils
+import com.example.transporttracker.utils.StopsParser
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -32,7 +35,10 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 class LocationTrackingService : Service() {
+    private lateinit var stops: List<Stop>
 
+    private val stopMatcher =
+        StopMatcher()
     private val serviceScope =
         CoroutineScope(
             SupervisorJob() + Dispatchers.IO
@@ -66,6 +72,9 @@ class LocationTrackingService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+
+        stops =
+            StopsParser.parse(this)
 
         repository =
             AppContainer
@@ -123,6 +132,18 @@ class LocationTrackingService : Service() {
                             }
 
                         lastLocation = location
+
+                        val nearestStop =
+                            stopMatcher.findNearestStop(
+                                latitude = location.latitude,
+                                longitude = location.longitude,
+                                stops = stops
+                            )
+
+                        Log.d(
+                            "STOP_MATCH",
+                            "nearestStop=${nearestStop?.stopName}"
+                        )
 
                         Log.d(
                             "TRIP_DEBUG",
