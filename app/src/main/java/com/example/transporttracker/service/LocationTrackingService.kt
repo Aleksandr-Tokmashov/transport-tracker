@@ -14,6 +14,7 @@ import com.example.transporttracker.data.local.entity.GpsPointEntity
 import com.example.transporttracker.data.local.entity.TripEntity
 import com.example.transporttracker.data.repository.TransportRepository
 import com.example.transporttracker.domain.model.Stop
+import com.example.transporttracker.domain.model.TransportType
 import com.example.transporttracker.domain.usecase.StopMatcher
 import com.example.transporttracker.domain.usecase.TripAnalyzer
 import com.example.transporttracker.domain.usecase.TripDetector
@@ -69,6 +70,9 @@ class LocationTrackingService : Service() {
     private var gpsLostDuration = 0L
 
     private var lastLocation: Location? = null
+
+    private var detectedTransport =
+        TransportType.UNKNOWN
 
     override fun onCreate() {
         super.onCreate()
@@ -139,6 +143,16 @@ class LocationTrackingService : Service() {
                                 longitude = location.longitude,
                                 stops = stops
                             )
+
+                        detectedTransport =
+                            stopMatcher.detectTransportType(
+                                nearestStop
+                            )
+
+                        Log.d(
+                            "TRANSPORT_TYPE",
+                            detectedTransport.name
+                        )
 
                         Log.d(
                             "STOP_MATCH",
@@ -318,13 +332,15 @@ class LocationTrackingService : Service() {
             )
 
         val trip =
-            analyzer.createTripEntity(
+            TripEntity(
+                id = currentTripId ?: 0L,
                 startTime = tripStartTime,
                 endTime = endTime,
+                transportType =
+                    detectedTransport.name,
                 averageSpeed = averageSpeed,
-                gpsLostDuration = gpsLostDuration,
-                dayType = dayType,
-                timeBin = timeBin
+                dayType = dayType.name,
+                timeBin = timeBin.name
             )
 
         serviceScope.launch {
@@ -359,6 +375,9 @@ class LocationTrackingService : Service() {
         gpsLostDuration = 0L
 
         speedSamples.clear()
+
+        detectedTransport =
+            TransportType.UNKNOWN
     }
 
     private fun createNotification():

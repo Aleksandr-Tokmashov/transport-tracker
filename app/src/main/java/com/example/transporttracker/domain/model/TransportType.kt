@@ -1,9 +1,14 @@
 package com.example.transporttracker.domain.model
 
 enum class TransportType {
+
+    WALK,
+
     BUS,
-    METRO,
+
     TRAM,
-    UNKNOWN,
-    WALK
+
+    METRO,
+
+    UNKNOWN
 }
