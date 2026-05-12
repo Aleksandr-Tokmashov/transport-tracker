@@ -28,7 +28,13 @@ class AnalyticsViewModel(
             AnalyticsUiState(
 
                 insights =
-                    patterns.map { it.text },
+                    patterns.map {
+
+                        AnalyticsInsight(
+                            text = it.text,
+                            count = it.count
+                        )
+                    },
 
                 totalTrips =
                     trips.size,

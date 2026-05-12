@@ -93,6 +93,7 @@ fun AppNavigation() {
                         AnalyticsViewModel(repository)
                     }
 
+
                 val state by viewModel
                     .uiState
                     .collectAsStateWithLifecycle()

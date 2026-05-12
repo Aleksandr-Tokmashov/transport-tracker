@@ -2,101 +2,67 @@ package com.example.transporttracker.ui.analytics
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.transporttracker.ui.components.AnalyticsCard
 
 @Composable
 fun AnalyticsScreen(
     state: AnalyticsUiState
 ) {
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
         verticalArrangement =
-            Arrangement.spacedBy(16.dp)
+            Arrangement.spacedBy(8.dp),
+        contentPadding =
+            PaddingValues(vertical = 16.dp)
     ) {
 
-        AnalyticsCard(
-            title = "Всего поездок",
-            value = state.totalTrips.toString()
-        )
+        item {
 
-        AnalyticsCard(
-            title = "Чаще всего",
-            value = state.mostUsedTransport
-        )
+            Column(
+                modifier =
+                    Modifier.padding(16.dp),
+                verticalArrangement =
+                    Arrangement.spacedBy(8.dp)
+            ) {
 
-        Text(
-            text = "Инсайты",
-            style =
-                MaterialTheme.typography.titleLarge
-        )
+                Text(
+                    text =
+                        "Всего поездок: ${state.totalTrips}",
+                    style =
+                        MaterialTheme
+                            .typography
+                            .headlineSmall
+                )
 
-        LazyColumn(
-            verticalArrangement =
-                Arrangement.spacedBy(8.dp)
-        ) {
+                Text(
+                    text =
+                        "Чаще всего: ${state.mostUsedTransport}",
+                    style =
+                        MaterialTheme
+                            .typography
+                            .titleMedium
+                )
 
-            items(state.insights) { insight ->
-
-                Card(
-                    elevation =
-                        CardDefaults.cardElevation(
-                            defaultElevation = 2.dp
-                        )
-                ) {
-
-                    Text(
-                        text = insight,
-                        modifier =
-                            Modifier.padding(16.dp)
-                    )
-                }
+                HorizontalDivider()
             }
         }
-    }
-}
 
-@Composable
-private fun AnalyticsCard(
-    title: String,
-    value: String
-) {
+        items(state.insights) { insight ->
 
-    Card(
-        elevation =
-            CardDefaults.cardElevation(
-                defaultElevation = 4.dp
-            )
-    ) {
-
-        Column(
-            modifier =
-                Modifier.padding(16.dp)
-        ) {
-
-            Text(
-                text = title,
-                style =
-                    MaterialTheme.typography.labelLarge
-            )
-
-            Text(
-                text = value,
-                style =
-                    MaterialTheme.typography.headlineMedium
+            AnalyticsCard(
+                insight = insight
             )
         }
     }
