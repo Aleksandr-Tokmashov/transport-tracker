@@ -18,35 +18,60 @@ object StopsParser {
 
         val array = JSONArray(json)
 
-        val result =
+        val stops =
             mutableListOf<Stop>()
 
         for (i in 0 until array.length()) {
 
-            val item = array.getJSONObject(i)
+            val obj =
+                array.getJSONObject(i)
 
-            result.add(
-                Stop(
-                    stopId =
-                        item.getLong("stop_id"),
+            val geoData =
+                obj.optJSONObject("geoData")
+                    ?: continue
 
-                    stopName =
-                        item.getString("stop_name"),
+            val coordinates =
+                geoData.optJSONArray("coordinates")
+                    ?: continue
 
-                    latitude =
-                        item.getString("stop_lat")
-                            .toDouble(),
+            if (coordinates.length() < 2) {
+                continue
+            }
 
-                    longitude =
-                        item.getString("stop_lon")
-                            .toDouble(),
+            // В geojson:
+            // [longitude, latitude]
 
-                    transportType =
-                        item.getString("TransportType")
-                )
+            val longitude =
+                coordinates.optDouble(0)
+
+            val latitude =
+                coordinates.optDouble(1)
+
+            val stop = Stop(
+
+                stopId =
+                    obj.optLong("stop_id"),
+
+                stopName =
+                    obj.optString(
+                        "stop_name",
+                        "UNKNOWN"
+                    ),
+
+                latitude = latitude,
+
+                longitude = longitude,
+
+                transportType =
+                    obj.optString(
+                        "TransportType",
+                        "UNKNOWN"
+                    )
             )
+
+            stops.add(stop)
         }
 
-        return result
+        return stops
     }
 }
