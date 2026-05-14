@@ -3,8 +3,10 @@ agp = "8.6.0"
 kotlin = "2.0.0"
 ksp = "2.0.0-1.0.22"
 runtime = "1.11.1"
+compiler = "3.2.0-alpha11"
 [libraries]
 androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
+androidx-compiler = { group = "androidx.databinding", name = "compiler", version.ref = "compiler" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

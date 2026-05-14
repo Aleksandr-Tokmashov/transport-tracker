@@ -13,8 +13,10 @@ import com.example.transporttracker.R
 import com.example.transporttracker.data.local.entity.GpsPointEntity
 import com.example.transporttracker.data.local.entity.TripEntity
 import com.example.transporttracker.data.repository.TransportRepository
+import com.example.transporttracker.domain.model.MetroEntrance
 import com.example.transporttracker.domain.model.Stop
 import com.example.transporttracker.domain.model.TransportType
+import com.example.transporttracker.domain.usecase.MetroMatcher
 import com.example.transporttracker.domain.usecase.StopMatcher
 import com.example.transporttracker.domain.usecase.TripAnalyzer
 import com.example.transporttracker.domain.usecase.TripDetector
@@ -22,11 +24,17 @@ import com.example.transporttracker.domain.usecase.TripEvent
 import com.example.transporttracker.utils.AppContainer
 import com.example.transporttracker.utils.Constants
 import com.example.transporttracker.utils.LocationUtils
+import com.example.transporttracker.utils.MetroParser
 import com.example.transporttracker.utils.StopsParser
 import com.google.android.gms.location.*
 import kotlinx.coroutines.*
 
 class LocationTrackingService : Service() {
+    private lateinit var metroEntrances:
+            List<MetroEntrance>
+
+    private val metroMatcher =
+        MetroMatcher()
 
     private lateinit var stops: List<Stop>
 
@@ -74,6 +82,9 @@ class LocationTrackingService : Service() {
 
         stops =
             StopsParser.parse(this)
+
+        metroEntrances =
+            MetroParser.parse(this)
 
         repository =
             AppContainer
@@ -166,9 +177,21 @@ class LocationTrackingService : Service() {
                             "nearestStop=${nearestStop?.stopName}"
                         )
 
+                        val nearestMetro =
+                            metroMatcher.isNearMetro(
+                                latitude = location.latitude,
+                                longitude = location.longitude,
+                                stations = metroEntrances
+                            )
+
+                        Log.d(
+                            "METRO_MATCH",
+                            nearestMetro?.stationName ?: "none"
+                        )
+
                         Log.d(
                             "TRIP_DEBUG",
-                            "speed=$speed"
+                            "speedMps=$speed speedKmh=${speed * 3.6f}"
                         )
 
                         handleGpsSignal(location)
@@ -177,7 +200,7 @@ class LocationTrackingService : Service() {
 
                             val event =
                                 tripDetector.process(
-                                    speedKmh = speed,
+                                    speedKmh = speed * 3.6f,
                                     timestamp = timestamp
                                 )
 
@@ -210,8 +233,32 @@ class LocationTrackingService : Service() {
 
                                 speedSamples.add(speed)
 
+                                val finalTransport =
+                                    if (
+                                        nearestMetro != null &&
+                                        getCurrentGpsLossDuration() > 60_000 &&
+                                        speed * 3.6f > 10f
+                                    ) {
+
+                                        Log.d(
+                                            "METRO",
+                                            "METRO DETECTED"
+                                        )
+
+                                        TransportType.METRO
+
+                                    } else {
+
+                                        detectedTransport
+                                    }
+
                                 transportSamples.add(
-                                    detectedTransport
+                                    finalTransport
+                                )
+
+                                Log.d(
+                                    "TRANSPORT_VOTE",
+                                    finalTransport.name
                                 )
                             }
 
@@ -437,6 +484,19 @@ class LocationTrackingService : Service() {
             )
 
         serviceScope.cancel()
+    }
+
+    private fun getCurrentGpsLossDuration(): Long {
+
+        return if (gpsLostStart != 0L) {
+
+            System.currentTimeMillis() -
+                    gpsLostStart
+
+        } else {
+
+            gpsLostDuration
+        }
     }
 
     override fun onBind(
