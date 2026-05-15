@@ -10,5 +10,7 @@ enum class TransportType {
 
     METRO,
 
+    TRAIN,
+
     UNKNOWN
 }

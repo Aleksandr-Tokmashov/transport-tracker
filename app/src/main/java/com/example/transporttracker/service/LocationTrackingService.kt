@@ -13,9 +13,11 @@ import com.example.transporttracker.R
 import com.example.transporttracker.data.local.entity.GpsPointEntity
 import com.example.transporttracker.data.local.entity.TripEntity
 import com.example.transporttracker.data.repository.TransportRepository
+import com.example.transporttracker.domain.model.McdEntrance
 import com.example.transporttracker.domain.model.MetroEntrance
 import com.example.transporttracker.domain.model.Stop
 import com.example.transporttracker.domain.model.TransportType
+import com.example.transporttracker.domain.usecase.McdMatcher
 import com.example.transporttracker.domain.usecase.MetroMatcher
 import com.example.transporttracker.domain.usecase.StopMatcher
 import com.example.transporttracker.domain.usecase.TripAnalyzer
@@ -24,12 +26,19 @@ import com.example.transporttracker.domain.usecase.TripEvent
 import com.example.transporttracker.utils.AppContainer
 import com.example.transporttracker.utils.Constants
 import com.example.transporttracker.utils.LocationUtils
+import com.example.transporttracker.utils.McdParser
 import com.example.transporttracker.utils.MetroParser
 import com.example.transporttracker.utils.StopsParser
 import com.google.android.gms.location.*
 import kotlinx.coroutines.*
 
 class LocationTrackingService : Service() {
+    private lateinit var mcdEntrances:
+            List<McdEntrance>
+
+    private val mcdMatcher =
+        McdMatcher()
+
     private lateinit var metroEntrances:
             List<MetroEntrance>
 
@@ -85,6 +94,9 @@ class LocationTrackingService : Service() {
 
         metroEntrances =
             MetroParser.parse(this)
+
+        mcdEntrances =
+            McdParser.parse(this)
 
         repository =
             AppContainer
@@ -167,6 +179,7 @@ class LocationTrackingService : Service() {
                                 nearestStop
                             )
 
+
                         Log.d(
                             "TRANSPORT_TYPE",
                             detectedTransport.name
@@ -187,6 +200,18 @@ class LocationTrackingService : Service() {
                         Log.d(
                             "METRO_MATCH",
                             nearestMetro?.stationName ?: "none"
+                        )
+
+                        val nearestMcd =
+                            mcdMatcher.isNearMcd(
+                                latitude = location.latitude,
+                                longitude = location.longitude,
+                                stations = mcdEntrances
+                            )
+
+                        Log.d(
+                            "MCD_MATCH",
+                            nearestMcd?.stationName ?: "none"
                         )
 
                         Log.d(
@@ -234,22 +259,34 @@ class LocationTrackingService : Service() {
                                 speedSamples.add(speed)
 
                                 val finalTransport =
-                                    if (
+                                    when {
+
                                         nearestMetro != null &&
-                                        getCurrentGpsLossDuration() > 60_000 &&
-                                        speed * 3.6f > 10f
-                                    ) {
+                                                getCurrentGpsLossDuration() > 60_000 -> {
 
-                                        Log.d(
-                                            "METRO",
-                                            "METRO DETECTED"
-                                        )
+                                            Log.d(
+                                                "METRO",
+                                                "METRO DETECTED"
+                                            )
 
-                                        TransportType.METRO
+                                            TransportType.METRO
+                                        }
 
-                                    } else {
+                                        nearestMcd != null &&
+                                                speed > 5f -> {
 
-                                        detectedTransport
+                                            Log.d(
+                                                "MCD",
+                                                "MCD DETECTED"
+                                            )
+
+                                            TransportType.TRAIN
+                                        }
+
+                                        else -> {
+
+                                            detectedTransport
+                                        }
                                     }
 
                                 transportSamples.add(
