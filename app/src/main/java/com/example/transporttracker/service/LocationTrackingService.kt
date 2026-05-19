@@ -23,6 +23,7 @@ import com.example.transporttracker.domain.usecase.StopMatcher
 import com.example.transporttracker.domain.usecase.TripAnalyzer
 import com.example.transporttracker.domain.usecase.TripDetector
 import com.example.transporttracker.domain.usecase.TripEvent
+import com.example.transporttracker.domain.usecase.WalkDetector
 import com.example.transporttracker.utils.AppContainer
 import com.example.transporttracker.utils.Constants
 import com.example.transporttracker.utils.LocationUtils
@@ -33,6 +34,8 @@ import com.google.android.gms.location.*
 import kotlinx.coroutines.*
 
 class LocationTrackingService : Service() {
+    private val walkDetector =
+        WalkDetector()
     private lateinit var mcdEntrances:
             List<McdEntrance>
 
@@ -174,6 +177,9 @@ class LocationTrackingService : Service() {
                                 stops = stops
                             )
 
+                        val nearStop =
+                            nearestStop != null
+
                         val detectedTransport =
                             stopMatcher.detectTransportType(
                                 nearestStop
@@ -213,6 +219,12 @@ class LocationTrackingService : Service() {
                             "MCD_MATCH",
                             nearestMcd?.stationName ?: "none"
                         )
+
+                        val nearMetro =
+                            nearestMetro != null
+
+                        val nearMcd =
+                            nearestMcd != null
 
                         Log.d(
                             "TRIP_DEBUG",
@@ -258,10 +270,18 @@ class LocationTrackingService : Service() {
 
                                 speedSamples.add(speed)
 
+                                val isWalking =
+                                    walkDetector.isWalking(
+                                        speedMps = speed,
+                                        nearStop = nearStop,
+                                        nearMetro = nearMetro,
+                                        nearMcd = nearMcd
+                                    )
+
                                 val finalTransport =
                                     when {
 
-                                        nearestMetro != null &&
+                                        nearMetro &&
                                                 getCurrentGpsLossDuration() > 60_000 -> {
 
                                             Log.d(
@@ -272,15 +292,25 @@ class LocationTrackingService : Service() {
                                             TransportType.METRO
                                         }
 
-                                        nearestMcd != null &&
-                                                speed > 5f -> {
+                                        nearMcd &&
+                                                getCurrentGpsLossDuration() > 60_000 -> {
 
                                             Log.d(
                                                 "MCD",
                                                 "MCD DETECTED"
                                             )
 
-                                            TransportType.TRAIN
+                                            TransportType.MCD
+                                        }
+
+                                        isWalking -> {
+
+                                            Log.d(
+                                                "WALK",
+                                                "WALK DETECTED"
+                                            )
+
+                                            TransportType.WALK
                                         }
 
                                         else -> {
