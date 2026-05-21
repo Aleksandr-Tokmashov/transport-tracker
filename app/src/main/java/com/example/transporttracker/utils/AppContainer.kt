@@ -17,7 +17,8 @@ object AppContainer {
             val instance = TransportRepository(
                 gpsPointDao = database.gpsPointDao(),
                 tripDao = database.tripDao(),
-                patternDao = database.patternDao()
+                patternDao = database.patternDao(),
+                segmentDao = database.tripSegmentDao()
             )
 
             repository = instance

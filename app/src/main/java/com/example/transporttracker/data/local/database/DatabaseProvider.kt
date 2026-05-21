@@ -17,6 +17,7 @@ object DatabaseProvider {
                 AppDatabase::class.java,
                 "transport_database"
             )
+                .addMigrations(AppDatabase.MIGRATION_1_2)
                 .fallbackToDestructiveMigration()
                 .build()
 
