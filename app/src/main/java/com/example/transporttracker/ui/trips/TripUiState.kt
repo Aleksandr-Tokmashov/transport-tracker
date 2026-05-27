@@ -14,5 +14,7 @@ data class TripUiState(
 
     val transportType: String,
 
-    val averageSpeed: String
+    val averageSpeed: String,
+
+    val segments: List<String> = emptyList()
 )

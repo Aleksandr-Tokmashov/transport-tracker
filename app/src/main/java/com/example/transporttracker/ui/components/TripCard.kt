@@ -24,44 +24,38 @@ fun TripCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(
-                horizontal = 16.dp,
-                vertical = 8.dp
-            ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 4.dp
-        )
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
 
-        Column {
+        Column(modifier = Modifier.padding(16.dp)) {
 
             Text(
                 text = trip.transportType,
                 style = MaterialTheme.typography.titleMedium
             )
 
+            if (trip.segments.size > 1) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = trip.segments.joinToString(" → "),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(text = "Дата: ${trip.date}")
 
-            Text(
-                text =
-                    "${trip.startTime} - ${trip.endTime}"
-            )
+            Text(text = "${trip.startTime} – ${trip.endTime}")
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement =
-                    Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-
-                Text(
-                    text = trip.duration
-                )
-
-                Text(
-                    text = trip.averageSpeed
-                )
+                Text(text = trip.duration)
+                Text(text = trip.averageSpeed)
             }
         }
     }
