@@ -15,4 +15,7 @@ object Constants {
 
     // How long the user must be slow before the current segment is sealed
     const val TRANSFER_PAUSE_DURATION = 20_000L
+
+    // How long GPS must be degraded during a trip to vote for metro (underground)
+    const val GPS_LOSS_METRO_DURATION = 60_000L
 }

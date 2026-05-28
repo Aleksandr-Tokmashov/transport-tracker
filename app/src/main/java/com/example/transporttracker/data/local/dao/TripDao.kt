@@ -2,7 +2,6 @@ package com.example.transporttracker.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import androidx.room.Upsert
@@ -20,6 +19,13 @@ interface TripDao {
 
     @Query("SELECT COUNT(*) FROM trips")
     fun getTripsCount(): Flow<Int>
+
+    // endTime = 0 is the sentinel for a trip that was active when the service died
+    @Query("SELECT * FROM trips WHERE endTime = 0 LIMIT 1")
+    suspend fun getActiveTrip(): TripEntity?
+
+    @Query("UPDATE trips SET transportType = :type WHERE id = :id")
+    suspend fun updateTransportType(id: Long, type: String)
 
     @Query("DELETE FROM trips")
     suspend fun clearAll()

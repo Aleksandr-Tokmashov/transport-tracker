@@ -88,4 +88,9 @@ class TripDetector {
     fun isTripActive(): Boolean {
         return isTripActive
     }
+
+    fun forceActive() {
+        isTripActive = true
+        lastMovingTime = System.currentTimeMillis()
+    }
 }

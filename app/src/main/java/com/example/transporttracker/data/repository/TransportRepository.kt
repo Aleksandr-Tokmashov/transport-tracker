@@ -8,6 +8,7 @@ import com.example.transporttracker.data.local.entity.GpsPointEntity
 import com.example.transporttracker.data.local.entity.PatternEntity
 import com.example.transporttracker.data.local.entity.TripEntity
 import com.example.transporttracker.data.local.entity.TripSegmentEntity
+import com.example.transporttracker.domain.model.TransportType
 import com.example.transporttracker.domain.model.Trip
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -25,8 +26,9 @@ class TransportRepository(
         gpsPointDao.insertPoint(point)
     }
 
-    fun getAllGpsPoints() =
-        gpsPointDao.getAllPoints()
+    suspend fun getPointsForTrip(tripId: Long): List<GpsPointEntity> {
+        return gpsPointDao.getPointsForTrip(tripId)
+    }
 
     suspend fun insertTrip(trip: TripEntity): Long {
         return tripDao.insertTrip(trip)
@@ -36,8 +38,20 @@ class TransportRepository(
         tripDao.updateTrip(trip)
     }
 
+    suspend fun getActiveTrip(): TripEntity? {
+        return tripDao.getActiveTrip()
+    }
+
+    suspend fun updateTripType(tripId: Long, type: TransportType) {
+        tripDao.updateTransportType(tripId, type.name)
+    }
+
     suspend fun insertSegment(segment: TripSegmentEntity) {
         segmentDao.insertSegment(segment)
+    }
+
+    suspend fun getSegmentsForTrip(tripId: Long): List<TripSegmentEntity> {
+        return segmentDao.getSegmentsForTrip(tripId)
     }
 
     fun getAllTrips(): Flow<List<Trip>> {
@@ -52,13 +66,13 @@ class TransportRepository(
         }
     }
 
-    fun getTripsCount() =
-        tripDao.getTripsCount()
+    fun getTripsCount() = tripDao.getTripsCount()
 
     suspend fun insertPattern(pattern: PatternEntity) {
         patternDao.insertPattern(pattern)
     }
 
-    fun getAllPatterns() =
-        patternDao.getAllPatterns()
+    fun getAllPatterns() = patternDao.getAllPatterns()
+
+    fun getAllGpsPoints() = gpsPointDao.getAllPoints()
 }

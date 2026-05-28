@@ -20,6 +20,7 @@ import com.example.transporttracker.domain.model.Stop
 import com.example.transporttracker.domain.model.TransportType
 import com.example.transporttracker.domain.usecase.McdMatcher
 import com.example.transporttracker.domain.usecase.MetroMatcher
+import com.example.transporttracker.domain.usecase.SegmentVoter
 import com.example.transporttracker.domain.usecase.StopMatcher
 import com.example.transporttracker.domain.usecase.TripAnalyzer
 import com.example.transporttracker.domain.usecase.TripDetector
@@ -80,7 +81,8 @@ class LocationTrackingService : Service() {
         val startTime: Long,
         val endTime: Long,
         val transportType: TransportType,
-        val averageSpeed: Float
+        val averageSpeed: Float,
+        val savedToDb: Boolean = false
     )
 
     // -------------------------------------------------------------------------
@@ -99,7 +101,40 @@ class LocationTrackingService : Service() {
 
         createNotificationChannel()
         startForeground(Constants.NOTIFICATION_ID, createNotification())
+
+        // Restore any trip that was interrupted when the service was killed
+        serviceScope.launch {
+            val activeTrip = repository.getActiveTrip()
+            if (activeTrip != null) {
+                tripStartTime = activeTrip.startTime
+                segmentStartTime = System.currentTimeMillis()
+                currentTripId = activeTrip.id
+                tripDetector.forceActive()
+
+                // Load already-saved segments so finishTrip can pick correct primary transport
+                val saved = repository.getSegmentsForTrip(activeTrip.id)
+                saved.forEach { seg ->
+                    completedSegments.add(
+                        FinishedSegment(
+                            startTime = seg.startTime,
+                            endTime = seg.endTime,
+                            transportType = runCatching {
+                                TransportType.valueOf(seg.transportType)
+                            }.getOrDefault(TransportType.UNKNOWN),
+                            averageSpeed = seg.averageSpeed,
+                            savedToDb = true
+                        )
+                    )
+                }
+                Log.d("TRIP_DEBUG", "Restored trip id=$currentTripId segments=${saved.size}")
+            }
+        }
+
         startLocationUpdates()
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        return START_STICKY
     }
 
     private fun startLocationUpdates() {
@@ -127,7 +162,7 @@ class LocationTrackingService : Service() {
 
                     lastLocation = location
 
-                    // filter GPS spikes
+                    // Filter GPS spikes
                     if (speed > 60f) {
                         Log.d("GPS_FILTER", "Ignored spike speed=$speed")
                         return@forEach
@@ -198,9 +233,16 @@ class LocationTrackingService : Service() {
                                 nearMcd = nearMcd
                             )
 
+                            // GPS loss in a tunnel is a reliable metro signal
+                            val gpsLost = currentGpsLossDuration() > Constants.GPS_LOSS_METRO_DURATION
+
                             val finalTransport = when {
+                                gpsLost && speed < 20f -> {
+                                    Log.d("METRO", "METRO via GPS loss")
+                                    TransportType.METRO
+                                }
                                 isStableMetroSignal() && speed < 12f -> {
-                                    Log.d("METRO", "METRO DETECTED")
+                                    Log.d("METRO", "METRO via proximity")
                                     TransportType.METRO
                                 }
                                 isStableMcdSignal() && speed < 20f -> {
@@ -214,8 +256,7 @@ class LocationTrackingService : Service() {
                             transportSamples.add(finalTransport)
                             Log.d("TRANSPORT_VOTE", finalTransport.name)
 
-                            // Transfer detection: sustained low speed seals the current
-                            // segment and starts a fresh one with cleared signal history.
+                            // Transfer detection: sustained low speed seals the segment
                             if (speed < Constants.TRANSFER_SPEED_MPS) {
                                 if (transferPauseStart == 0L) {
                                     transferPauseStart = timestamp
@@ -260,10 +301,11 @@ class LocationTrackingService : Service() {
         mcdHistory.clear()
         transferPauseStart = 0L
 
+        // endTime = 0 marks the trip as active; used for restart recovery
         currentTripId = repository.insertTrip(
             TripEntity(
                 startTime = startTime,
-                endTime = startTime,
+                endTime = 0L,
                 transportType = "UNKNOWN",
                 averageSpeed = 0f,
                 dayType = "",
@@ -280,14 +322,10 @@ class LocationTrackingService : Service() {
 
         if (transportSamples.isEmpty()) return
 
-        val segTransport = transportSamples
-            .groupingBy { it }
-            .eachCount()
-            .maxByOrNull { it.value }
-            ?.key ?: TransportType.UNKNOWN
-
         val movingSpeeds = speedSamples.filter { it > 1f }
         val avgSpeed = if (movingSpeeds.isNotEmpty()) movingSpeeds.average().toFloat() else 0f
+
+        val segTransport = SegmentVoter.vote(transportSamples, avgSpeed)
 
         completedSegments.add(
             FinishedSegment(
@@ -323,21 +361,22 @@ class LocationTrackingService : Service() {
         val dayType = analyzer.getDayType(tripStartTime)
         val timeBin = analyzer.getTimeBin(tripStartTime)
 
-        val trip = TripEntity(
-            id = currentTripId ?: 0L,
-            startTime = tripStartTime,
-            endTime = endTime,
-            transportType = primaryTransport.name,
-            averageSpeed = overallAvgSpeed,
-            dayType = dayType.name,
-            timeBin = timeBin.name
-        )
-
         currentTripId?.let { tripId ->
 
-            repository.updateTrip(trip.copy(id = tripId))
+            repository.updateTrip(
+                TripEntity(
+                    id = tripId,
+                    startTime = tripStartTime,
+                    endTime = endTime,
+                    transportType = primaryTransport.name,
+                    averageSpeed = overallAvgSpeed,
+                    dayType = dayType.name,
+                    timeBin = timeBin.name
+                )
+            )
 
-            completedSegments.forEach { seg ->
+            // Only persist segments that weren't already in DB (e.g. after a restart)
+            completedSegments.filter { !it.savedToDb }.forEach { seg ->
                 repository.insertSegment(
                     TripSegmentEntity(
                         tripId = tripId,
@@ -349,7 +388,7 @@ class LocationTrackingService : Service() {
                 )
             }
 
-            Log.d("TRIP_DEBUG", "Trip updated with ${completedSegments.size} segment(s): $trip")
+            Log.d("TRIP_DEBUG", "Trip finished with ${completedSegments.size} segment(s): $primaryTransport")
         }
 
         resetTrip()
@@ -395,6 +434,11 @@ class LocationTrackingService : Service() {
                 gpsLostStart = 0L
             }
         }
+    }
+
+    private fun currentGpsLossDuration(): Long {
+        return if (gpsLostStart != 0L) System.currentTimeMillis() - gpsLostStart
+        else gpsLostDuration
     }
 
     private fun isStableMetroSignal(): Boolean =

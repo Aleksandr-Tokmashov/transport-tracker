@@ -11,6 +11,9 @@ interface TripSegmentDao {
     @Insert
     suspend fun insertSegment(segment: TripSegmentEntity): Long
 
+    @Query("SELECT * FROM trip_segments WHERE tripId = :tripId ORDER BY startTime ASC")
+    suspend fun getSegmentsForTrip(tripId: Long): List<TripSegmentEntity>
+
     @Query("SELECT * FROM trip_segments WHERE tripId IN (:tripIds) ORDER BY startTime ASC")
     suspend fun getSegmentsForTrips(tripIds: List<Long>): List<TripSegmentEntity>
 }
