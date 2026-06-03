@@ -8,11 +8,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavType
 import androidx.navigation.compose.*
+import androidx.navigation.navArgument
 import com.example.transporttracker.ui.analytics.AnalyticsScreen
 import com.example.transporttracker.ui.analytics.AnalyticsViewModel
 import com.example.transporttracker.ui.home.HomeRoute
-import com.example.transporttracker.ui.home.HomeScreen
+import com.example.transporttracker.ui.map.TripMapScreen
 import com.example.transporttracker.ui.trips.TripsScreen
 import com.example.transporttracker.ui.trips.TripsViewModel
 import com.example.transporttracker.utils.AppContainer
@@ -21,31 +23,38 @@ import com.example.transporttracker.utils.AppContainer
 fun AppNavigation() {
 
     val navController = rememberNavController()
+    val currentBackStack by navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStack?.destination?.route
+
+    val isTopLevel = currentRoute in listOf(
+        Screen.Home.route,
+        Screen.Trips.route,
+        Screen.Analytics.route
+    )
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
-
-                NavigationBarItem(
-                    selected = false,
-                    onClick = { navController.navigate(Screen.Home.route) },
-                    label = { Text("Home") },
-                    icon = {}
-                )
-
-                NavigationBarItem(
-                    selected = false,
-                    onClick = { navController.navigate(Screen.Trips.route) },
-                    label = { Text("Trips") },
-                    icon = {}
-                )
-
-                NavigationBarItem(
-                    selected = false,
-                    onClick = { navController.navigate(Screen.Analytics.route) },
-                    label = { Text("Analytics") },
-                    icon = {}
-                )
+            if (isTopLevel) {
+                NavigationBar {
+                    NavigationBarItem(
+                        selected = currentRoute == Screen.Home.route,
+                        onClick = { navController.navigate(Screen.Home.route) },
+                        label = { Text("Home") },
+                        icon = {}
+                    )
+                    NavigationBarItem(
+                        selected = currentRoute == Screen.Trips.route,
+                        onClick = { navController.navigate(Screen.Trips.route) },
+                        label = { Text("Trips") },
+                        icon = {}
+                    )
+                    NavigationBarItem(
+                        selected = currentRoute == Screen.Analytics.route,
+                        onClick = { navController.navigate(Screen.Analytics.route) },
+                        label = { Text("Analytics") },
+                        icon = {}
+                    )
+                }
             }
         }
     ) { padding ->
@@ -61,45 +70,39 @@ fun AppNavigation() {
             }
 
             composable(Screen.Trips.route) {
-
-                val repository =
-                    AppContainer.provideRepository(
-                        LocalContext.current
-                    )
-
-                val viewModel =
-                    remember {
-                        TripsViewModel(repository)
-                    }
-
-                val trips by viewModel
-                    .trips
-                    .collectAsStateWithLifecycle()
+                val context = LocalContext.current
+                val repository = AppContainer.provideRepository(context)
+                val viewModel = remember { TripsViewModel(repository) }
+                val trips by viewModel.trips.collectAsStateWithLifecycle()
 
                 TripsScreen(
-                    trips = trips
+                    trips = trips,
+                    onTripClick = { tripId ->
+                        navController.navigate(Screen.TripMap.createRoute(tripId))
+                    },
+                    onCorrectType = { tripId, type ->
+                        viewModel.correctTripType(tripId, type)
+                    }
                 )
             }
 
             composable(Screen.Analytics.route) {
+                val context = LocalContext.current
+                val repository = AppContainer.provideRepository(context)
+                val viewModel = remember { AnalyticsViewModel(repository) }
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-                val repository =
-                    AppContainer.provideRepository(
-                        LocalContext.current
-                    )
+                AnalyticsScreen(state = state)
+            }
 
-                val viewModel =
-                    remember {
-                        AnalyticsViewModel(repository)
-                    }
-
-
-                val state by viewModel
-                    .uiState
-                    .collectAsStateWithLifecycle()
-
-                AnalyticsScreen(
-                    state = state
+            composable(
+                route = Screen.TripMap.route,
+                arguments = listOf(navArgument("tripId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val tripId = backStackEntry.arguments?.getLong("tripId") ?: return@composable
+                TripMapScreen(
+                    tripId = tripId,
+                    onBack = { navController.popBackStack() }
                 )
             }
         }

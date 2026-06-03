@@ -16,7 +16,7 @@ interface GpsPointDao {
     @Query("SELECT * FROM gps_points ORDER BY timestamp DESC")
     fun getAllPoints(): Flow<List<GpsPointEntity>>
 
-    @Query("SELECT * FROM gps_points WHERE tripId = :tripId")
+    @Query("SELECT * FROM gps_points WHERE tripId = :tripId ORDER BY timestamp ASC")
     suspend fun getPointsForTrip(tripId: Long): List<GpsPointEntity>
 
     @Query("DELETE FROM gps_points")

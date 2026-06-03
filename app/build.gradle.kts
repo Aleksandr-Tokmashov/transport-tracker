@@ -73,8 +73,8 @@ dependencies {
     // Room
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
-    implementation(libs.androidx.compose.runtime)
-    implementation(libs.androidx.compiler)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+
     ksp("androidx.room:room-compiler:2.6.1")
 
     // Location
@@ -82,6 +82,9 @@ dependencies {
 
     // Lifecycle
     implementation("androidx.lifecycle:lifecycle-service:2.8.2")
+
+    // Map
+    implementation("org.osmdroid:osmdroid-android:6.1.18")
 
     // Tests
     testImplementation("junit:junit:4.13.2")

@@ -1,0 +1,110 @@
+package com.example.transporttracker.ui.map
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.transporttracker.data.local.entity.GpsPointEntity
+import com.example.transporttracker.utils.AppContainer
+import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Polyline
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TripMapScreen(
+    tripId: Long,
+    onBack: () -> Unit
+) {
+    val context = LocalContext.current
+    val repository = AppContainer.provideRepository(context)
+    val viewModel = remember { MapViewModel(repository, tripId) }
+    val points by viewModel.points.collectAsStateWithLifecycle()
+
+    val mapView = remember {
+        Configuration.getInstance().userAgentValue = context.packageName
+        MapView(context).apply {
+            setTileSource(TileSourceFactory.MAPNIK)
+            setMultiTouchControls(true)
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose { mapView.onDetach() }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Маршрут") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Назад"
+                        )
+                    }
+                }
+            )
+        }
+    ) { padding ->
+
+        if (points.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Нет данных GPS для этой поездки")
+            }
+        } else {
+            AndroidView(
+                factory = { mapView },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                update = { map ->
+                    drawTrack(map, points)
+                }
+            )
+        }
+    }
+}
+
+private fun drawTrack(mapView: MapView, points: List<GpsPointEntity>) {
+    val geoPoints = points.map { GeoPoint(it.latitude, it.longitude) }
+
+    mapView.overlays.clear()
+
+    val polyline = Polyline().apply { setPoints(geoPoints) }
+    mapView.overlays.add(polyline)
+
+    // Start marker
+    if (geoPoints.isNotEmpty()) {
+        val midLat = geoPoints.map { it.latitude }.average()
+        val midLon = geoPoints.map { it.longitude }.average()
+        mapView.controller.setZoom(15.0)
+        mapView.controller.setCenter(GeoPoint(midLat, midLon))
+    }
+
+    mapView.invalidate()
+}
