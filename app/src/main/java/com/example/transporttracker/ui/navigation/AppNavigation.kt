@@ -4,9 +4,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
@@ -14,10 +13,10 @@ import androidx.navigation.navArgument
 import com.example.transporttracker.ui.analytics.AnalyticsScreen
 import com.example.transporttracker.ui.analytics.AnalyticsViewModel
 import com.example.transporttracker.ui.home.HomeRoute
+import com.example.transporttracker.ui.map.MapViewModel
 import com.example.transporttracker.ui.map.TripMapScreen
 import com.example.transporttracker.ui.trips.TripsScreen
 import com.example.transporttracker.ui.trips.TripsViewModel
-import com.example.transporttracker.utils.AppContainer
 
 @Composable
 fun AppNavigation() {
@@ -70,9 +69,7 @@ fun AppNavigation() {
             }
 
             composable(Screen.Trips.route) {
-                val context = LocalContext.current
-                val repository = AppContainer.provideRepository(context)
-                val viewModel = remember { TripsViewModel(repository) }
+                val viewModel: TripsViewModel = hiltViewModel()
                 val trips by viewModel.trips.collectAsStateWithLifecycle()
 
                 TripsScreen(
@@ -87,9 +84,7 @@ fun AppNavigation() {
             }
 
             composable(Screen.Analytics.route) {
-                val context = LocalContext.current
-                val repository = AppContainer.provideRepository(context)
-                val viewModel = remember { AnalyticsViewModel(repository) }
+                val viewModel: AnalyticsViewModel = hiltViewModel()
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
 
                 AnalyticsScreen(state = state)
@@ -98,10 +93,12 @@ fun AppNavigation() {
             composable(
                 route = Screen.TripMap.route,
                 arguments = listOf(navArgument("tripId") { type = NavType.LongType })
-            ) { backStackEntry ->
-                val tripId = backStackEntry.arguments?.getLong("tripId") ?: return@composable
+            ) {
+                val viewModel: MapViewModel = hiltViewModel()
+                val points by viewModel.points.collectAsStateWithLifecycle()
+
                 TripMapScreen(
-                    tripId = tripId,
+                    points = points,
                     onBack = { navController.popBackStack() }
                 )
             }

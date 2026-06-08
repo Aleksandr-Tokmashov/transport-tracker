@@ -13,8 +13,11 @@ import com.example.transporttracker.domain.model.Trip
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import com.example.transporttracker.utils.TripMapper
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class TransportRepository(
+@Singleton
+class TransportRepository @Inject constructor(
 
     private val gpsPointDao: GpsPointDao,
     private val tripDao: TripDao,

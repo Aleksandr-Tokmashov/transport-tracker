@@ -13,15 +13,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.transporttracker.data.local.entity.GpsPointEntity
-import com.example.transporttracker.utils.AppContainer
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -31,13 +28,10 @@ import org.osmdroid.views.overlay.Polyline
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripMapScreen(
-    tripId: Long,
+    points: List<GpsPointEntity>,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
-    val repository = AppContainer.provideRepository(context)
-    val viewModel = remember { MapViewModel(repository, tripId) }
-    val points by viewModel.points.collectAsStateWithLifecycle()
 
     val mapView = remember {
         Configuration.getInstance().userAgentValue = context.packageName
@@ -82,9 +76,7 @@ fun TripMapScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
-                update = { map ->
-                    drawTrack(map, points)
-                }
+                update = { map -> drawTrack(map, points) }
             )
         }
     }
@@ -94,17 +86,11 @@ private fun drawTrack(mapView: MapView, points: List<GpsPointEntity>) {
     val geoPoints = points.map { GeoPoint(it.latitude, it.longitude) }
 
     mapView.overlays.clear()
+    mapView.overlays.add(Polyline().apply { setPoints(geoPoints) })
 
-    val polyline = Polyline().apply { setPoints(geoPoints) }
-    mapView.overlays.add(polyline)
-
-    // Start marker
-    if (geoPoints.isNotEmpty()) {
-        val midLat = geoPoints.map { it.latitude }.average()
-        val midLon = geoPoints.map { it.longitude }.average()
-        mapView.controller.setZoom(15.0)
-        mapView.controller.setCenter(GeoPoint(midLat, midLon))
-    }
-
+    val midLat = geoPoints.map { it.latitude }.average()
+    val midLon = geoPoints.map { it.longitude }.average()
+    mapView.controller.setZoom(15.0)
+    mapView.controller.setCenter(GeoPoint(midLat, midLon))
     mapView.invalidate()
 }

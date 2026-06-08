@@ -25,7 +25,7 @@ class McdMatcher {
         latitude: Double,
         longitude: Double,
         stations: List<McdEntrance>,
-        radiusMeters: Float = 100f
+        radiusMeters: Float = 300f
     ): McdEntrance? {
 
         val nearest =

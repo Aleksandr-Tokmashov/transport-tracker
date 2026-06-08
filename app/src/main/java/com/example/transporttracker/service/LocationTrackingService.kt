@@ -27,8 +27,9 @@ import com.example.transporttracker.domain.usecase.TripDetector
 import com.example.transporttracker.domain.usecase.TripEvent
 import com.example.transporttracker.domain.usecase.WalkDetector
 import com.example.transporttracker.ui.home.TrackingState
-import com.example.transporttracker.utils.AppContainer
 import com.example.transporttracker.utils.Constants
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import com.example.transporttracker.utils.LocationUtils
 import com.example.transporttracker.utils.McdParser
 import com.example.transporttracker.utils.MetroParser
@@ -36,6 +37,7 @@ import com.example.transporttracker.utils.StopsParser
 import com.google.android.gms.location.*
 import kotlinx.coroutines.*
 
+@AndroidEntryPoint
 class LocationTrackingService : Service() {
 
     // --- signal history for stable transport detection ---
@@ -57,7 +59,10 @@ class LocationTrackingService : Service() {
 
     // --- infrastructure ---
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private lateinit var repository: TransportRepository
+
+    @Inject
+    lateinit var repository: TransportRepository
+
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
 
@@ -96,7 +101,6 @@ class LocationTrackingService : Service() {
         metroEntrances = MetroParser.parse(this)
         mcdEntrances = McdParser.parse(this)
 
-        repository = AppContainer.provideRepository(applicationContext)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         createNotificationChannel()

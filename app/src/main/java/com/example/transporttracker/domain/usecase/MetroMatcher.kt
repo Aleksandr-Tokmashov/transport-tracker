@@ -26,7 +26,7 @@ class MetroMatcher {
         latitude: Double,
         longitude: Double,
         stations: List<MetroEntrance>,
-        radiusMeters: Float = 70f
+        radiusMeters: Float = 300f
     ): MetroEntrance? {
 
         val nearest =
