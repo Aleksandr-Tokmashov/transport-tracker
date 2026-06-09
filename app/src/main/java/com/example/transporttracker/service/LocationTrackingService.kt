@@ -58,7 +58,12 @@ class LocationTrackingService : Service() {
     private lateinit var mcdEntrances: List<McdEntrance>
 
     // --- infrastructure ---
-    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    // limitedParallelism(1) gives a single-threaded serial dispatcher: all shared
+    // mutable state (histories, sample lists, trip counters) is accessed from one
+    // thread, eliminating data races without any locking.
+    private val serviceScope = CoroutineScope(
+        SupervisorJob() + Dispatchers.Default.limitedParallelism(1)
+    )
 
     @Inject
     lateinit var repository: TransportRepository
@@ -194,20 +199,25 @@ class LocationTrackingService : Service() {
                     val nearMetro = nearestMetro != null
                     val nearMcd = nearestMcd != null
 
-                    metroHistory.addLast(nearMetro)
-                    if (metroHistory.size > 15) metroHistory.removeFirst()
-
-                    mcdHistory.addLast(nearMcd)
-                    if (mcdHistory.size > 15) mcdHistory.removeFirst()
-
                     Log.d("STOP_MATCH", "nearestStop=${nearestStop?.stopName}")
                     Log.d("METRO_MATCH", nearestMetro?.stationName ?: "none")
                     Log.d("MCD_MATCH", nearestMcd?.stationName ?: "none")
                     Log.d("TRIP_DEBUG", "speedMps=$speed speedKmh=${speed * 3.6f}")
 
-                    handleGpsSignal(location)
-
+                    // All mutable state lives on the single-threaded serviceScope.
+                    // Values captured here (speed, nearMetro, etc.) are immutable locals
+                    // — safe to read from any thread.
                     serviceScope.launch {
+
+                        // Update signal histories on the service thread (not main thread)
+                        metroHistory.addLast(nearMetro)
+                        if (metroHistory.size > 15) metroHistory.removeFirst()
+
+                        mcdHistory.addLast(nearMcd)
+                        if (mcdHistory.size > 15) mcdHistory.removeFirst()
+
+                        // GPS accuracy tracking also lives here now
+                        handleGpsSignal(location)
 
                         val event = tripDetector.process(
                             speedKmh = speed * 3.6f,
