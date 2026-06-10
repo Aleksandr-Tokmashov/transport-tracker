@@ -16,7 +16,9 @@ object TripUiMapper {
             duration = TripFormatter.formatDuration(trip.startTime, trip.endTime),
             transportType = trip.transportType.displayName(),
             averageSpeed = TripFormatter.formatSpeed(trip.averageSpeed),
-            segments = trip.segments.map { it.transportType.displayName() }
+            segments = trip.segments.map { it.transportType.displayName() },
+            transportTypeEnum = trip.transportType,
+            segmentTypes = trip.segments.map { it.transportType }
         )
     }
 

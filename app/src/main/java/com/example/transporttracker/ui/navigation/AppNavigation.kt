@@ -1,6 +1,10 @@
 package com.example.transporttracker.ui.navigation
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.DirectionsBus
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,20 +42,20 @@ fun AppNavigation() {
                     NavigationBarItem(
                         selected = currentRoute == Screen.Home.route,
                         onClick = { navController.navigate(Screen.Home.route) },
-                        label = { Text("Home") },
-                        icon = {}
+                        label = { Text("Главная") },
+                        icon = { Icon(Icons.Default.Home, contentDescription = null) }
                     )
                     NavigationBarItem(
                         selected = currentRoute == Screen.Trips.route,
                         onClick = { navController.navigate(Screen.Trips.route) },
-                        label = { Text("Trips") },
-                        icon = {}
+                        label = { Text("Поездки") },
+                        icon = { Icon(Icons.Default.DirectionsBus, contentDescription = null) }
                     )
                     NavigationBarItem(
                         selected = currentRoute == Screen.Analytics.route,
                         onClick = { navController.navigate(Screen.Analytics.route) },
-                        label = { Text("Analytics") },
-                        icon = {}
+                        label = { Text("Статистика") },
+                        icon = { Icon(Icons.Default.BarChart, contentDescription = null) }
                     )
                 }
             }
