@@ -18,7 +18,8 @@ object TripUiMapper {
             averageSpeed = TripFormatter.formatSpeed(trip.averageSpeed),
             segments = trip.segments.map { it.transportType.displayName() },
             transportTypeEnum = trip.transportType,
-            segmentTypes = trip.segments.map { it.transportType }
+            segmentTypes = trip.segments.map { it.transportType },
+            distance = if (trip.distanceMeters > 0f) TripFormatter.formatDistance(trip.distanceMeters) else ""
         )
     }
 

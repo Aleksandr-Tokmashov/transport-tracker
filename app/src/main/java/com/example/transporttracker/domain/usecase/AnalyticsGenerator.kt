@@ -1,40 +1,25 @@
 package com.example.transporttracker.domain.usecase
 
 import com.example.transporttracker.domain.model.AnalyticsPattern
+import com.example.transporttracker.domain.model.TransportType
 import com.example.transporttracker.domain.model.Trip
 
 class AnalyticsGenerator {
 
-    fun generatePatterns(
-        trips: List<Trip>
-    ): List<AnalyticsPattern> {
+    fun generatePatterns(trips: List<Trip>): List<AnalyticsPattern> {
 
-        val grouped =
-            trips.groupBy {
-                Triple(
-                    it.transportType,
-                    it.dayType,
-                    it.timeBin
-                )
-            }
-
-        val patterns =
-            mutableListOf<AnalyticsPattern>()
+        val grouped = trips.groupBy { Triple(it.transportType, it.dayType, it.timeBin) }
+        val patterns = mutableListOf<AnalyticsPattern>()
 
         grouped.forEach { (key, tripsList) ->
-
             if (tripsList.size >= 3) {
-
-                val text =
-                    buildPatternText(
-                        transport = key.first.name,
-                        dayType = key.second.name,
-                        timeBin = key.third.name
-                    )
-
                 patterns.add(
                     AnalyticsPattern(
-                        text = text,
+                        text = buildPatternText(
+                            transport = key.first.name,
+                            dayType = key.second.name,
+                            timeBin = key.third.name
+                        ),
                         count = tripsList.size
                     )
                 )
@@ -44,55 +29,40 @@ class AnalyticsGenerator {
         return patterns
     }
 
-    private fun buildPatternText(
-        transport: String,
-        dayType: String,
-        timeBin: String
-    ): String {
+    private fun buildPatternText(transport: String, dayType: String, timeBin: String): String {
 
-        val dayText =
-            if (dayType == "WEEKDAY") {
-                "В будние дни"
-            } else {
-                "В выходные"
-            }
+        val dayText = if (dayType == "WEEKDAY") "В будние дни" else "В выходные"
 
-        val timeText =
-            when (timeBin) {
+        val timeText = when (timeBin) {
+            "MORNING" -> "утром"
+            "DAY" -> "днём"
+            "EVENING" -> "вечером"
+            else -> "ночью"
+        }
 
-                "MORNING" -> "утром"
+        val transportText = when (transport) {
+            "BUS" -> "ездите на автобусе"
+            "METRO" -> "ездите на метро"
+            "TRAM" -> "ездите на трамвае"
+            "MCD" -> "ездите на МЦД"
+            "WALK" -> "ходите пешком"
+            else -> "используете транспорт"
+        }
 
-                "DAY" -> "днем"
-
-                "EVENING" -> "вечером"
-
-                else -> "ночью"
-            }
-
-        val transportText =
-            when (transport) {
-
-                "BUS" -> "BUS"
-
-                "METRO" -> "METRO"
-
-                "TRAM" -> "TRAM"
-
-                else -> "UNKNOWN"
-            }
-
-        return "$dayText $timeText вы чаще используете $transportText"
+        return "$dayText $timeText вы чаще $transportText"
     }
 
-    fun getMostUsedTransport(
-        trips: List<Trip>
-    ): String {
-
-        return trips
-            .groupBy { it.transportType }
-            .maxByOrNull { it.value.size }
-            ?.key
-            ?.name
-            ?: "UNKNOWN"
+    fun getMostUsedTransport(trips: List<Trip>): String {
+        val type = trips.groupBy { it.transportType }
+            .maxByOrNull { it.value.size }?.key
+            ?: return "Нет данных"
+        return when (type) {
+            TransportType.BUS -> "Автобус"
+            TransportType.METRO -> "Метро"
+            TransportType.TRAM -> "Трамвай"
+            TransportType.MCD -> "МЦД"
+            TransportType.WALK -> "Пешком"
+            TransportType.UNKNOWN -> "Неизвестно"
+        }
     }
 }

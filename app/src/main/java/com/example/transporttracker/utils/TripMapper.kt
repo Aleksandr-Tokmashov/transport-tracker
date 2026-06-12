@@ -32,6 +32,7 @@ object TripMapper {
                 runCatching {
                     TimeBin.valueOf(entity.timeBin)
                 }.getOrDefault(TimeBin.DAY),
+            distanceMeters = entity.distanceMeters,
             segments = segments.map { seg ->
                 TripSegment(
                     id = seg.id,

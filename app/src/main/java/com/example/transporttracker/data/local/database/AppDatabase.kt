@@ -20,16 +20,13 @@ import com.example.transporttracker.data.local.entity.TripSegmentEntity
         PatternEntity::class,
         TripSegmentEntity::class
     ],
-    version = 2
+    version = 3
 )
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun gpsPointDao(): GpsPointDao
-
     abstract fun tripDao(): TripDao
-
     abstract fun patternDao(): PatternDao
-
     abstract fun tripSegmentDao(): TripSegmentDao
 
     companion object {
@@ -44,6 +41,14 @@ abstract class AppDatabase : RoomDatabase() {
                     "`endTime` INTEGER NOT NULL, " +
                     "`transportType` TEXT NOT NULL, " +
                     "`averageSpeed` REAL NOT NULL)"
+                )
+            }
+        }
+
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    "ALTER TABLE trips ADD COLUMN distanceMeters REAL NOT NULL DEFAULT 0"
                 )
             }
         }

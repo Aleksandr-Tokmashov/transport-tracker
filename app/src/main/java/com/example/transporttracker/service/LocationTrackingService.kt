@@ -77,6 +77,8 @@ class LocationTrackingService : Service() {
     private var lastLocation: Location? = null
     private var gpsLostStart = 0L
     private var gpsLostDuration = 0L
+    private var totalDistanceMeters = 0f
+    private var lastNotifiedTransport = TransportType.UNKNOWN
 
     // --- per-segment accumulators ---
     private val speedSamples = mutableListOf<Float>()
@@ -109,7 +111,7 @@ class LocationTrackingService : Service() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         createNotificationChannel()
-        startForeground(Constants.NOTIFICATION_ID, createNotification())
+        startForeground(Constants.NOTIFICATION_ID, buildNotification())
 
         // Restore any trip that was interrupted when the service was killed
         serviceScope.launch {
@@ -168,6 +170,10 @@ class LocationTrackingService : Service() {
                     } else {
                         0f
                     }
+
+                    val distance = if (lastLocation != null && speed <= 60f) {
+                        lastLocation!!.distanceTo(location)
+                    } else 0f
 
                     lastLocation = location
 
@@ -238,6 +244,7 @@ class LocationTrackingService : Service() {
 
                         if (tripDetector.isTripActive()) {
 
+                            totalDistanceMeters += distance
                             speedSamples.add(speed)
 
                             val isWalking = walkDetector.isWalking(
@@ -269,6 +276,7 @@ class LocationTrackingService : Service() {
 
                             transportSamples.add(finalTransport)
                             Log.d("TRANSPORT_VOTE", finalTransport.name)
+                            maybeUpdateNotification(finalTransport, speed * 3.6f)
 
                             // Transfer detection: sustained low speed seals the segment
                             if (speed < Constants.TRANSFER_SPEED_MPS) {
@@ -314,6 +322,7 @@ class LocationTrackingService : Service() {
         metroHistory.clear()
         mcdHistory.clear()
         transferPauseStart = 0L
+        totalDistanceMeters = 0f
 
         // endTime = 0 marks the trip as active; used for restart recovery
         currentTripId = repository.insertTrip(
@@ -385,7 +394,8 @@ class LocationTrackingService : Service() {
                     transportType = primaryTransport.name,
                     averageSpeed = overallAvgSpeed,
                     dayType = dayType.name,
-                    timeBin = timeBin.name
+                    timeBin = timeBin.name,
+                    distanceMeters = totalDistanceMeters
                 )
             )
 
@@ -415,10 +425,14 @@ class LocationTrackingService : Service() {
         segmentStartTime = 0L
         gpsLostStart = 0L
         gpsLostDuration = 0L
+        totalDistanceMeters = 0f
+        lastNotifiedTransport = TransportType.UNKNOWN
         speedSamples.clear()
         transportSamples.clear()
         completedSegments.clear()
         transferPauseStart = 0L
+        getSystemService(NotificationManager::class.java)
+            .notify(Constants.NOTIFICATION_ID, buildNotification())
     }
 
     private suspend fun saveGpsPoint(
@@ -461,13 +475,37 @@ class LocationTrackingService : Service() {
     private fun isStableMcdSignal(): Boolean =
         mcdHistory.count { it } >= 10
 
-    private fun createNotification(): Notification {
+    private fun maybeUpdateNotification(transport: TransportType, speedKmh: Float) {
+        if (transport == lastNotifiedTransport) return
+        lastNotifiedTransport = transport
+        getSystemService(NotificationManager::class.java)
+            .notify(Constants.NOTIFICATION_ID, buildNotification(transport, speedKmh))
+    }
+
+    private fun buildNotification(
+        transport: TransportType = TransportType.UNKNOWN,
+        speedKmh: Float = 0f
+    ): Notification {
+        val text = if (transport != TransportType.UNKNOWN) {
+            "${transport.notificationLabel()} · ${speedKmh.toInt()} км/ч"
+        } else {
+            "Отслеживание активно"
+        }
         return NotificationCompat.Builder(this, Constants.NOTIFICATION_CHANNEL_ID)
             .setContentTitle("Transport Tracker")
-            .setContentText("Tracking location...")
+            .setContentText(text)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setOngoing(true)
             .build()
+    }
+
+    private fun TransportType.notificationLabel() = when (this) {
+        TransportType.WALK -> "Пешком"
+        TransportType.BUS -> "Автобус"
+        TransportType.TRAM -> "Трамвай"
+        TransportType.METRO -> "Метро"
+        TransportType.MCD -> "МЦД"
+        TransportType.UNKNOWN -> "Определение..."
     }
 
     private fun createNotificationChannel() {

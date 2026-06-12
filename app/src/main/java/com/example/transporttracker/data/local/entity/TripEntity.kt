@@ -5,19 +5,12 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "trips")
 data class TripEntity(
-
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
-
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val startTime: Long,
-
     val endTime: Long,
-
     val transportType: String,
-
     val averageSpeed: Float,
-
     val dayType: String,
-
-    val timeBin: String
+    val timeBin: String,
+    val distanceMeters: Float = 0f
 )
