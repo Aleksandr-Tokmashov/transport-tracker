@@ -1,5 +1,6 @@
 package com.example.transporttracker.ui.navigation
 
+import android.content.Intent
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
@@ -7,8 +8,10 @@ import androidx.compose.material.icons.filled.DirectionsBus
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
@@ -75,6 +78,20 @@ fun AppNavigation() {
             composable(Screen.Trips.route) {
                 val viewModel: TripsViewModel = hiltViewModel()
                 val trips by viewModel.trips.collectAsStateWithLifecycle()
+                val context = LocalContext.current
+
+                LaunchedEffect(viewModel) {
+                    viewModel.exportEvent.collect { uri ->
+                        val intent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/csv"
+                            putExtra(Intent.EXTRA_STREAM, uri)
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                        context.startActivity(
+                            Intent.createChooser(intent, "Экспорт поездок")
+                        )
+                    }
+                }
 
                 TripsScreen(
                     trips = trips,
@@ -83,7 +100,8 @@ fun AppNavigation() {
                     },
                     onCorrectType = { tripId, type ->
                         viewModel.correctTripType(tripId, type)
-                    }
+                    },
+                    onExport = { viewModel.exportTrips() }
                 )
             }
 
