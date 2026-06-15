@@ -29,7 +29,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.transporttracker.R
 
 @Composable
 fun HomeScreen(
@@ -69,7 +71,10 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = if (state.isTracking) "Трекинг активен" else "Трекинг остановлен",
+            text = if (state.isTracking)
+                stringResource(R.string.tracking_active)
+            else
+                stringResource(R.string.tracking_stopped),
             style = MaterialTheme.typography.headlineSmall,
             color = trackingColor
         )
@@ -77,7 +82,7 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "${state.tripsCount} поездок",
+            text = stringResource(R.string.trips_count, state.tripsCount),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -100,7 +105,7 @@ fun HomeScreen(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Остановить")
+                Text(stringResource(R.string.btn_stop_tracking))
             }
         } else {
             Button(
@@ -116,7 +121,10 @@ fun HomeScreen(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = if (state.needsPermission) "Разрешить доступ" else "Начать трекинг"
+                    text = if (state.needsPermission)
+                        stringResource(R.string.btn_allow_access)
+                    else
+                        stringResource(R.string.btn_start_tracking)
                 )
             }
         }

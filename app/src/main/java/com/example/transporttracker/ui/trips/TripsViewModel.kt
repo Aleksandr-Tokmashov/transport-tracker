@@ -20,12 +20,13 @@ import javax.inject.Inject
 @HiltViewModel
 class TripsViewModel @Inject constructor(
     private val repository: TransportRepository,
-    private val exportManager: ExportManager
+    private val exportManager: ExportManager,
+    private val tripUiMapper: TripUiMapper
 ) : ViewModel() {
 
     val trips = repository
         .getAllTrips()
-        .map { trips -> trips.map { TripUiMapper.map(it) } }
+        .map { trips -> trips.map { tripUiMapper.map(it) } }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

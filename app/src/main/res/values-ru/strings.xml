@@ -1,0 +1,75 @@
+<resources>
+    <string name="app_name">Трекер транспорта</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Главная</string>
+    <string name="nav_trips">Поездки</string>
+    <string name="nav_analytics">Статистика</string>
+
+    <!-- HomeScreen -->
+    <string name="tracking_active">Трекинг активен</string>
+    <string name="tracking_stopped">Трекинг остановлен</string>
+    <string name="trips_count">%d поездок</string>
+    <string name="btn_stop_tracking">Остановить</string>
+    <string name="btn_start_tracking">Начать трекинг</string>
+    <string name="btn_allow_access">Разрешить доступ</string>
+
+    <!-- TripsScreen -->
+    <string name="trips_header_count">Поездки (%d)</string>
+    <string name="no_trips_yet">Поездок пока нет</string>
+    <string name="export_cd">Экспортировать</string>
+    <string name="export_chooser_title">Экспорт поездок</string>
+
+    <!-- TripCard -->
+    <string name="correct_transport_title">Исправить тип транспорта</string>
+    <string name="cancel">Отмена</string>
+
+    <!-- Transport types -->
+    <string name="transport_walk">Пешком</string>
+    <string name="transport_bus">Автобус</string>
+    <string name="transport_tram">Трамвай</string>
+    <string name="transport_metro">Метро</string>
+    <string name="transport_mcd">МЦД</string>
+    <string name="transport_unknown">Неизвестно</string>
+
+    <!-- MapScreen -->
+    <string name="map_route_title">Маршрут</string>
+    <string name="back">Назад</string>
+    <string name="no_gps_data">Нет данных GPS для этой поездки</string>
+
+    <!-- AnalyticsScreen -->
+    <string name="total_trips">Всего поездок: %d</string>
+    <string name="most_used_transport">Чаще всего: %s</string>
+
+    <!-- Notification -->
+    <string name="notification_channel_name">Служба отслеживания</string>
+    <string name="notification_title">Трекер транспорта</string>
+    <string name="notification_tracking_active">Отслеживание активно</string>
+    <string name="notification_transport_speed">%1$s · %2$d км/ч</string>
+    <string name="speed_unit">км/ч</string>
+
+    <!-- TripFormatter units -->
+    <string name="duration_minutes">%d мин</string>
+    <string name="speed_kmh">%.1f км/ч</string>
+    <string name="distance_meters">%d м</string>
+    <string name="distance_km_decimal">%.1f км</string>
+    <string name="distance_km">%d км</string>
+
+    <!-- Analytics patterns -->
+    <string name="pattern_format">%1$s %2$s %3$s</string>
+    <string name="pattern_day_weekday">В будние дни</string>
+    <string name="pattern_day_weekend">В выходные</string>
+    <string name="pattern_time_morning">утром</string>
+    <string name="pattern_time_day">днём</string>
+    <string name="pattern_time_evening">вечером</string>
+    <string name="pattern_time_night">ночью</string>
+    <string name="pattern_transport_bus">вы чаще ездите на автобусе</string>
+    <string name="pattern_transport_metro">вы чаще ездите на метро</string>
+    <string name="pattern_transport_tram">вы чаще ездите на трамвае</string>
+    <string name="pattern_transport_mcd">вы чаще ездите на МЦД</string>
+    <string name="pattern_transport_walk">вы чаще ходите пешком</string>
+    <string name="pattern_transport_other">вы чаще используете транспорт</string>
+
+    <!-- Misc -->
+    <string name="no_data">Нет данных</string>
+</resources>

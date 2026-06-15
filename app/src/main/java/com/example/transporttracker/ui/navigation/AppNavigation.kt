@@ -12,11 +12,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
+import com.example.transporttracker.R
 import com.example.transporttracker.ui.analytics.AnalyticsScreen
 import com.example.transporttracker.ui.analytics.AnalyticsViewModel
 import com.example.transporttracker.ui.home.HomeRoute
@@ -45,19 +47,19 @@ fun AppNavigation() {
                     NavigationBarItem(
                         selected = currentRoute == Screen.Home.route,
                         onClick = { navController.navigate(Screen.Home.route) },
-                        label = { Text("Главная") },
+                        label = { Text(stringResource(R.string.nav_home)) },
                         icon = { Icon(Icons.Default.Home, contentDescription = null) }
                     )
                     NavigationBarItem(
                         selected = currentRoute == Screen.Trips.route,
                         onClick = { navController.navigate(Screen.Trips.route) },
-                        label = { Text("Поездки") },
+                        label = { Text(stringResource(R.string.nav_trips)) },
                         icon = { Icon(Icons.Default.DirectionsBus, contentDescription = null) }
                     )
                     NavigationBarItem(
                         selected = currentRoute == Screen.Analytics.route,
                         onClick = { navController.navigate(Screen.Analytics.route) },
-                        label = { Text("Статистика") },
+                        label = { Text(stringResource(R.string.nav_analytics)) },
                         icon = { Icon(Icons.Default.BarChart, contentDescription = null) }
                     )
                 }
@@ -79,6 +81,7 @@ fun AppNavigation() {
                 val viewModel: TripsViewModel = hiltViewModel()
                 val trips by viewModel.trips.collectAsStateWithLifecycle()
                 val context = LocalContext.current
+                val chooserTitle = stringResource(R.string.export_chooser_title)
 
                 LaunchedEffect(viewModel) {
                     viewModel.exportEvent.collect { uri ->
@@ -87,9 +90,7 @@ fun AppNavigation() {
                             putExtra(Intent.EXTRA_STREAM, uri)
                             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         }
-                        context.startActivity(
-                            Intent.createChooser(intent, "Экспорт поездок")
-                        )
+                        context.startActivity(Intent.createChooser(intent, chooserTitle))
                     }
                 }
 

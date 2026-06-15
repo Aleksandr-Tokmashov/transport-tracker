@@ -1,3 +1,75 @@
 <resources>
-    <string name="app_name">TransportBehaviorTracker</string>
+    <string name="app_name">Transport Tracker</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_trips">Trips</string>
+    <string name="nav_analytics">Analytics</string>
+
+    <!-- HomeScreen -->
+    <string name="tracking_active">Tracking active</string>
+    <string name="tracking_stopped">Tracking stopped</string>
+    <string name="trips_count">%d trips</string>
+    <string name="btn_stop_tracking">Stop</string>
+    <string name="btn_start_tracking">Start tracking</string>
+    <string name="btn_allow_access">Allow access</string>
+
+    <!-- TripsScreen -->
+    <string name="trips_header_count">Trips (%d)</string>
+    <string name="no_trips_yet">No trips yet</string>
+    <string name="export_cd">Export</string>
+    <string name="export_chooser_title">Export trips</string>
+
+    <!-- TripCard -->
+    <string name="correct_transport_title">Correct transport type</string>
+    <string name="cancel">Cancel</string>
+
+    <!-- Transport types -->
+    <string name="transport_walk">Walking</string>
+    <string name="transport_bus">Bus</string>
+    <string name="transport_tram">Tram</string>
+    <string name="transport_metro">Metro</string>
+    <string name="transport_mcd">MCD</string>
+    <string name="transport_unknown">Unknown</string>
+
+    <!-- MapScreen -->
+    <string name="map_route_title">Route</string>
+    <string name="back">Back</string>
+    <string name="no_gps_data">No GPS data for this trip</string>
+
+    <!-- AnalyticsScreen -->
+    <string name="total_trips">Total trips: %d</string>
+    <string name="most_used_transport">Most used: %s</string>
+
+    <!-- Notification -->
+    <string name="notification_channel_name">Tracking Service</string>
+    <string name="notification_title">Transport Tracker</string>
+    <string name="notification_tracking_active">Tracking active</string>
+    <string name="notification_transport_speed">%1$s · %2$d km/h</string>
+    <string name="speed_unit">km/h</string>
+
+    <!-- TripFormatter units -->
+    <string name="duration_minutes">%d min</string>
+    <string name="speed_kmh">%.1f km/h</string>
+    <string name="distance_meters">%d m</string>
+    <string name="distance_km_decimal">%.1f km</string>
+    <string name="distance_km">%d km</string>
+
+    <!-- Analytics patterns -->
+    <string name="pattern_format">%1$s %2$s, %3$s</string>
+    <string name="pattern_day_weekday">On weekdays</string>
+    <string name="pattern_day_weekend">On weekends</string>
+    <string name="pattern_time_morning">in the morning</string>
+    <string name="pattern_time_day">during the day</string>
+    <string name="pattern_time_evening">in the evening</string>
+    <string name="pattern_time_night">at night</string>
+    <string name="pattern_transport_bus">you mostly take the bus</string>
+    <string name="pattern_transport_metro">you mostly take the metro</string>
+    <string name="pattern_transport_tram">you mostly take the tram</string>
+    <string name="pattern_transport_mcd">you mostly take the MCD</string>
+    <string name="pattern_transport_walk">you mostly walk</string>
+    <string name="pattern_transport_other">you mostly use public transport</string>
+
+    <!-- Misc -->
+    <string name="no_data">No data</string>
 </resources>

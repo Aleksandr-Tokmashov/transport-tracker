@@ -26,6 +26,7 @@ import com.example.transporttracker.domain.usecase.TripAnalyzer
 import com.example.transporttracker.domain.usecase.TripDetector
 import com.example.transporttracker.domain.usecase.TripEvent
 import com.example.transporttracker.domain.usecase.WalkDetector
+import com.example.transporttracker.ui.components.nameResId
 import com.example.transporttracker.ui.home.TrackingState
 import com.example.transporttracker.utils.Constants
 import dagger.hilt.android.AndroidEntryPoint
@@ -487,31 +488,22 @@ class LocationTrackingService : Service() {
         speedKmh: Float = 0f
     ): Notification {
         val text = if (transport != TransportType.UNKNOWN) {
-            "${transport.notificationLabel()} · ${speedKmh.toInt()} км/ч"
+            getString(R.string.notification_transport_speed, getString(transport.nameResId()), speedKmh.toInt())
         } else {
-            "Отслеживание активно"
+            getString(R.string.notification_tracking_active)
         }
         return NotificationCompat.Builder(this, Constants.NOTIFICATION_CHANNEL_ID)
-            .setContentTitle("Transport Tracker")
+            .setContentTitle(getString(R.string.notification_title))
             .setContentText(text)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setOngoing(true)
             .build()
     }
 
-    private fun TransportType.notificationLabel() = when (this) {
-        TransportType.WALK -> "Пешком"
-        TransportType.BUS -> "Автобус"
-        TransportType.TRAM -> "Трамвай"
-        TransportType.METRO -> "Метро"
-        TransportType.MCD -> "МЦД"
-        TransportType.UNKNOWN -> "Определение..."
-    }
-
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
             Constants.NOTIFICATION_CHANNEL_ID,
-            "Tracking Service",
+            getString(R.string.notification_channel_name),
             NotificationManager.IMPORTANCE_LOW
         )
         getSystemService(NotificationManager::class.java).createNotificationChannel(channel)

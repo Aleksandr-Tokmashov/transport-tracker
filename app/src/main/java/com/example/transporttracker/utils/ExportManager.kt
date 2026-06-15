@@ -18,7 +18,7 @@ class ExportManager @Inject constructor(
         val file = File(context.cacheDir, "trips_export.csv")
         file.bufferedWriter(Charsets.UTF_8).use { writer ->
             writer.write("﻿") // BOM — корректное открытие в Excel
-            writer.write("ID,Дата,Начало,Конец,Длительность,Транспорт,Расстояние,Скорость,Сегменты\n")
+            writer.write("ID,Date,Start,End,Duration,Transport,Distance,Speed,Segments\n")
             trips.forEach { trip ->
                 val row = listOf(
                     trip.id.toString(),

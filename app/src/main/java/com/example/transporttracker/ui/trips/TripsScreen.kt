@@ -18,7 +18,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.transporttracker.R
 import com.example.transporttracker.domain.model.TransportType
 import com.example.transporttracker.ui.components.TripCard
 
@@ -39,14 +41,17 @@ fun TripsScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = if (trips.isEmpty()) "Поездки" else "Поездки (${trips.size})",
+                text = if (trips.isEmpty())
+                    stringResource(R.string.nav_trips)
+                else
+                    stringResource(R.string.trips_header_count, trips.size),
                 style = MaterialTheme.typography.titleLarge
             )
             if (trips.isNotEmpty()) {
                 IconButton(onClick = onExport) {
                     Icon(
                         imageVector = Icons.Default.Share,
-                        contentDescription = "Экспортировать"
+                        contentDescription = stringResource(R.string.export_cd)
                     )
                 }
             }
@@ -58,7 +63,7 @@ fun TripsScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Поездок пока нет",
+                    text = stringResource(R.string.no_trips_yet),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

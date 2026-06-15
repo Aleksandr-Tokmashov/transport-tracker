@@ -12,10 +12,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AnalyticsViewModel @Inject constructor(
-    repository: TransportRepository
+    repository: TransportRepository,
+    private val generator: AnalyticsGenerator
 ) : ViewModel() {
-
-    private val generator = AnalyticsGenerator()
 
     val uiState = repository
         .getAllTrips()

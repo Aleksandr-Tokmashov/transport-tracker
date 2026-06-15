@@ -1,34 +1,29 @@
 package com.example.transporttracker.utils
 
-import com.example.transporttracker.domain.model.TransportType
+import android.content.Context
 import com.example.transporttracker.domain.model.Trip
+import com.example.transporttracker.ui.components.localizedName
 import com.example.transporttracker.ui.trips.TripUiState
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
 
-object TripUiMapper {
-
-    fun map(trip: Trip): TripUiState {
-
-        return TripUiState(
-            id = trip.id,
-            date = TripFormatter.formatDate(trip.startTime),
-            startTime = TripFormatter.formatTimeOnly(trip.startTime),
-            endTime = TripFormatter.formatTimeOnly(trip.endTime),
-            duration = TripFormatter.formatDuration(trip.startTime, trip.endTime),
-            transportType = trip.transportType.displayName(),
-            averageSpeed = TripFormatter.formatSpeed(trip.averageSpeed),
-            segments = trip.segments.map { it.transportType.displayName() },
-            transportTypeEnum = trip.transportType,
-            segmentTypes = trip.segments.map { it.transportType },
-            distance = if (trip.distanceMeters > 0f) TripFormatter.formatDistance(trip.distanceMeters) else ""
-        )
-    }
-
-    private fun TransportType.displayName(): String = when (this) {
-        TransportType.WALK -> "Пешком"
-        TransportType.BUS -> "Автобус"
-        TransportType.TRAM -> "Трамвай"
-        TransportType.METRO -> "Метро"
-        TransportType.MCD -> "МЦД"
-        TransportType.UNKNOWN -> "Неизвестно"
-    }
+@Singleton
+class TripUiMapper @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val formatter: TripFormatter
+) {
+    fun map(trip: Trip): TripUiState = TripUiState(
+        id = trip.id,
+        date = formatter.formatDate(trip.startTime),
+        startTime = formatter.formatTimeOnly(trip.startTime),
+        endTime = formatter.formatTimeOnly(trip.endTime),
+        duration = formatter.formatDuration(trip.startTime, trip.endTime),
+        transportType = trip.transportType.localizedName(context),
+        averageSpeed = formatter.formatSpeed(trip.averageSpeed),
+        segments = trip.segments.map { it.transportType.localizedName(context) },
+        transportTypeEnum = trip.transportType,
+        segmentTypes = trip.segments.map { it.transportType },
+        distance = if (trip.distanceMeters > 0f) formatter.formatDistance(trip.distanceMeters) else ""
+    )
 }

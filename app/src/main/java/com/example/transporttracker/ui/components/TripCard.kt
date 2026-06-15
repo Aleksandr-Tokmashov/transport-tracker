@@ -31,7 +31,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.transporttracker.R
 import com.example.transporttracker.domain.model.TransportType
 import com.example.transporttracker.ui.trips.TripUiState
 
@@ -195,7 +197,7 @@ private fun TransportTypeCorrectionDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Исправить тип транспорта") },
+        title = { Text(stringResource(R.string.correct_transport_title)) },
         text = {
             Column {
                 TransportType.entries.forEach { type ->
@@ -214,7 +216,7 @@ private fun TransportTypeCorrectionDialog(
                                 tint = type.color(),
                                 modifier = Modifier.size(20.dp)
                             )
-                            Text(text = type.displayName())
+                            Text(text = type.localizedName())
                         }
                     }
                 }
@@ -222,16 +224,7 @@ private fun TransportTypeCorrectionDialog(
         },
         confirmButton = {},
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Отмена") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
         }
     )
-}
-
-fun TransportType.displayName(): String = when (this) {
-    TransportType.WALK -> "Пешком"
-    TransportType.BUS -> "Автобус"
-    TransportType.TRAM -> "Трамвай"
-    TransportType.METRO -> "Метро"
-    TransportType.MCD -> "МЦД"
-    TransportType.UNKNOWN -> "Неизвестно"
 }
