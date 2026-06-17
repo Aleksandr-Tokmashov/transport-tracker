@@ -45,6 +45,16 @@ class TransportRepository @Inject constructor(
         return tripDao.getActiveTrip()
     }
 
+    suspend fun deleteAbandonedTrip(tripId: Long) {
+        gpsPointDao.deletePointsForTrip(tripId)
+        segmentDao.deleteSegmentsForTrip(tripId)
+        tripDao.deleteTripById(tripId)
+    }
+
+    suspend fun deleteOrphanedGpsPoints() {
+        gpsPointDao.deleteOrphanedPoints()
+    }
+
     suspend fun updateTripType(tripId: Long, type: TransportType) {
         tripDao.updateTransportType(tripId, type.name)
     }

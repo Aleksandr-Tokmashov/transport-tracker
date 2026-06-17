@@ -19,6 +19,12 @@ interface GpsPointDao {
     @Query("SELECT * FROM gps_points WHERE tripId = :tripId ORDER BY timestamp ASC")
     suspend fun getPointsForTrip(tripId: Long): List<GpsPointEntity>
 
+    @Query("DELETE FROM gps_points WHERE tripId = :tripId")
+    suspend fun deletePointsForTrip(tripId: Long)
+
+    @Query("DELETE FROM gps_points WHERE tripId IS NULL")
+    suspend fun deleteOrphanedPoints()
+
     @Query("DELETE FROM gps_points")
     suspend fun clearAll()
 }

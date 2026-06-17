@@ -2,7 +2,6 @@ package com.example.transporttracker.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,12 +9,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -116,14 +113,6 @@ fun TripCard(
                         )
                     }
                 }
-
-                if (trip.segmentTypes.size > 1) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    SegmentChipsRow(
-                        segments = trip.segments,
-                        segmentTypes = trip.segmentTypes
-                    )
-                }
             }
         }
     }
@@ -136,57 +125,6 @@ fun TripCard(
                 showCorrectionDialog = false
             }
         )
-    }
-}
-
-@Composable
-private fun SegmentChipsRow(
-    segments: List<String>,
-    segmentTypes: List<TransportType>
-) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        segments.zip(segmentTypes).forEachIndexed { index, (label, type) ->
-            if (index > 0) {
-                Text(
-                    text = "→",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            SegmentChip(label = label, transportType = type)
-        }
-    }
-}
-
-@Composable
-private fun SegmentChip(label: String, transportType: TransportType) {
-    val color = transportType.color()
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(50))
-            .background(color.copy(alpha = 0.12f))
-            .border(1.dp, color.copy(alpha = 0.4f), RoundedCornerShape(50))
-            .padding(horizontal = 8.dp, vertical = 3.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(3.dp)
-        ) {
-            Icon(
-                imageVector = transportType.icon(),
-                contentDescription = null,
-                modifier = Modifier.size(12.dp),
-                tint = color
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = color
-            )
-        }
     }
 }
 

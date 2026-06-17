@@ -118,27 +118,34 @@ class LocationTrackingService : Service() {
         serviceScope.launch {
             val activeTrip = repository.getActiveTrip()
             if (activeTrip != null) {
-                tripStartTime = activeTrip.startTime
-                segmentStartTime = System.currentTimeMillis()
-                currentTripId = activeTrip.id
-                tripDetector.forceActive()
+                val tripAge = System.currentTimeMillis() - activeTrip.startTime
+                if (tripAge > Constants.MAX_TRIP_DURATION_MS) {
+                    // Trip is too old to be real (e.g. service died overnight) — discard it
+                    repository.deleteAbandonedTrip(activeTrip.id)
+                    Log.d("TRIP_DEBUG", "Abandoned stale trip id=${activeTrip.id} age=${tripAge / 60000}min")
+                } else {
+                    tripStartTime = activeTrip.startTime
+                    segmentStartTime = System.currentTimeMillis()
+                    currentTripId = activeTrip.id
+                    tripDetector.forceActive()
 
-                // Load already-saved segments so finishTrip can pick correct primary transport
-                val saved = repository.getSegmentsForTrip(activeTrip.id)
-                saved.forEach { seg ->
-                    completedSegments.add(
-                        FinishedSegment(
-                            startTime = seg.startTime,
-                            endTime = seg.endTime,
-                            transportType = runCatching {
-                                TransportType.valueOf(seg.transportType)
-                            }.getOrDefault(TransportType.UNKNOWN),
-                            averageSpeed = seg.averageSpeed,
-                            savedToDb = true
+                    // Load already-saved segments so finishTrip can pick correct primary transport
+                    val saved = repository.getSegmentsForTrip(activeTrip.id)
+                    saved.forEach { seg ->
+                        completedSegments.add(
+                            FinishedSegment(
+                                startTime = seg.startTime,
+                                endTime = seg.endTime,
+                                transportType = runCatching {
+                                    TransportType.valueOf(seg.transportType)
+                                }.getOrDefault(TransportType.UNKNOWN),
+                                averageSpeed = seg.averageSpeed,
+                                savedToDb = true
+                            )
                         )
-                    )
+                    }
+                    Log.d("TRIP_DEBUG", "Restored trip id=$currentTripId segments=${saved.size}")
                 }
-                Log.d("TRIP_DEBUG", "Restored trip id=$currentTripId segments=${saved.size}")
             }
         }
 
@@ -172,14 +179,14 @@ class LocationTrackingService : Service() {
                         0f
                     }
 
-                    val distance = if (lastLocation != null && speed <= 60f) {
+                    val distance = if (lastLocation != null && speed <= 28f) {
                         lastLocation!!.distanceTo(location)
                     } else 0f
 
                     lastLocation = location
 
-                    // Filter GPS spikes
-                    if (speed > 60f) {
+                    // Filter GPS spikes (> 28 m/s ≈ 100 km/h — no urban transit goes faster)
+                    if (speed > 28f) {
                         Log.d("GPS_FILTER", "Ignored spike speed=$speed")
                         return@forEach
                     }
@@ -263,7 +270,7 @@ class LocationTrackingService : Service() {
                                     Log.d("METRO", "METRO via GPS loss")
                                     TransportType.METRO
                                 }
-                                isStableMetroSignal() && speed < 12f -> {
+                                isStableMetroSignal() && speed < 25f -> {
                                     Log.d("METRO", "METRO via proximity")
                                     TransportType.METRO
                                 }
@@ -292,11 +299,13 @@ class LocationTrackingService : Service() {
                             }
                         }
 
-                        saveGpsPoint(
-                            location = location,
-                            timestamp = timestamp,
-                            speed = speed
-                        )
+                        if (tripDetector.isTripActive()) {
+                            saveGpsPoint(
+                                location = location,
+                                timestamp = timestamp,
+                                speed = speed
+                            )
+                        }
                     }
                 }
             }

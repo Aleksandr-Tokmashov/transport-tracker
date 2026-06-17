@@ -14,8 +14,11 @@ interface TripDao {
     @Upsert
     suspend fun insertTrip(trip: TripEntity): Long
 
-    @Query("SELECT * FROM trips ORDER BY startTime DESC")
+    @Query("SELECT * FROM trips WHERE endTime > 0 ORDER BY startTime DESC")
     fun getAllTrips(): Flow<List<TripEntity>>
+
+    @Query("DELETE FROM trips WHERE id = :id")
+    suspend fun deleteTripById(id: Long)
 
     @Query("SELECT COUNT(*) FROM trips")
     fun getTripsCount(): Flow<Int>

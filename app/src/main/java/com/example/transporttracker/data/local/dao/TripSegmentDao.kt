@@ -16,4 +16,7 @@ interface TripSegmentDao {
 
     @Query("SELECT * FROM trip_segments WHERE tripId IN (:tripIds) ORDER BY startTime ASC")
     suspend fun getSegmentsForTrips(tripIds: List<Long>): List<TripSegmentEntity>
+
+    @Query("DELETE FROM trip_segments WHERE tripId = :tripId")
+    suspend fun deleteSegmentsForTrip(tripId: Long)
 }
