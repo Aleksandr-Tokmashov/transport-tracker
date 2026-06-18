@@ -40,6 +40,13 @@
     <!-- AnalyticsScreen -->
     <string name="total_trips">Всего поездок: %d</string>
     <string name="most_used_transport">Чаще всего: %s</string>
+    <string name="analytics_total_distance">%.0f км всего</string>
+    <string name="chart_transport_title">По видам транспорта</string>
+    <string name="chart_time_title">По времени суток</string>
+    <string name="chart_time_morning">Утро</string>
+    <string name="chart_time_day">День</string>
+    <string name="chart_time_evening">Вечер</string>
+    <string name="chart_time_night">Ночь</string>
 
     <!-- Notification -->
     <string name="notification_channel_name">Служба отслеживания</string>

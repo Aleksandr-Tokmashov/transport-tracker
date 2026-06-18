@@ -40,6 +40,13 @@
     <!-- AnalyticsScreen -->
     <string name="total_trips">Total trips: %d</string>
     <string name="most_used_transport">Most used: %s</string>
+    <string name="analytics_total_distance">%.0f km total</string>
+    <string name="chart_transport_title">Transport breakdown</string>
+    <string name="chart_time_title">Activity by time of day</string>
+    <string name="chart_time_morning">Morning</string>
+    <string name="chart_time_day">Day</string>
+    <string name="chart_time_evening">Evening</string>
+    <string name="chart_time_night">Night</string>
 
     <!-- Notification -->
     <string name="notification_channel_name">Tracking Service</string>

@@ -21,9 +21,12 @@ class AnalyticsViewModel @Inject constructor(
         .map { trips ->
             val patterns = generator.generatePatterns(trips)
             AnalyticsUiState(
-                insights = patterns.map { AnalyticsInsight(text = it.text, count = it.count) },
                 totalTrips = trips.size,
-                mostUsedTransport = generator.getMostUsedTransport(trips)
+                totalDistanceKm = generator.getTotalDistanceKm(trips),
+                mostUsedTransport = generator.getMostUsedTransport(trips),
+                insights = patterns.map { AnalyticsInsight(text = it.text, count = it.count) },
+                transportShares = generator.getTransportShares(trips),
+                timeBinCounts = generator.getTimeBinCounts(trips)
             )
         }
         .stateIn(
