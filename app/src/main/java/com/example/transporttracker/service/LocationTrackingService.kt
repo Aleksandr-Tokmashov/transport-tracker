@@ -45,6 +45,10 @@ class LocationTrackingService : Service() {
     private val metroHistory = ArrayDeque<Boolean>()
     private val mcdHistory = ArrayDeque<Boolean>()
 
+    // Latched per-segment: once metro entrance proximity fires, keep voting METRO
+    // until the segment is sealed (prevents tunnel GPS noise from washing out the signal)
+    private var segmentMetroDetected = false
+
     // --- detectors ---
     private val walkDetector = WalkDetector()
     private val mcdMatcher = McdMatcher()
@@ -265,13 +269,19 @@ class LocationTrackingService : Service() {
                             // GPS loss in a tunnel is a reliable metro signal
                             val gpsLost = currentGpsLossDuration() > Constants.GPS_LOSS_METRO_DURATION
 
+                            // Latch metro once confirmed — keeps METRO votes through tunnel GPS noise
+                            if (isStableMetroSignal() && speed < 25f) {
+                                segmentMetroDetected = true
+                                Log.d("METRO", "METRO latched via proximity")
+                            }
+
                             val finalTransport = when {
                                 gpsLost && speed < 20f -> {
                                     Log.d("METRO", "METRO via GPS loss")
                                     TransportType.METRO
                                 }
-                                isStableMetroSignal() && speed < 25f -> {
-                                    Log.d("METRO", "METRO via proximity")
+                                segmentMetroDetected && speed < 25f -> {
+                                    Log.d("METRO", "METRO via latched proximity")
                                     TransportType.METRO
                                 }
                                 isStableMcdSignal() && speed < 20f -> {
@@ -331,6 +341,7 @@ class LocationTrackingService : Service() {
         completedSegments.clear()
         metroHistory.clear()
         mcdHistory.clear()
+        segmentMetroDetected = false
         transferPauseStart = 0L
         totalDistanceMeters = 0f
 
@@ -374,6 +385,7 @@ class LocationTrackingService : Service() {
         speedSamples.clear()
         metroHistory.clear()
         mcdHistory.clear()
+        segmentMetroDetected = false
 
         Log.d("SEGMENT", "Sealed: $segTransport, total=${completedSegments.size}")
     }
