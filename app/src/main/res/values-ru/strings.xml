@@ -77,6 +77,20 @@
     <string name="pattern_transport_walk">вы чаще ходите пешком</string>
     <string name="pattern_transport_other">вы чаще используете транспорт</string>
 
+    <!-- Trip completion notification -->
+    <string name="notification_trip_done_channel">Итог поездки</string>
+    <string name="notification_trip_done_title">Поездка завершена</string>
+    <string name="notification_trip_done_text">%1$s · %2$.1f км · %3$d мин</string>
+
+    <!-- MapScreen stats bar -->
+    <string name="map_stats_speed">%d км/ч</string>
+
+    <!-- Home screen widget -->
+    <string name="widget_label">Последняя поездка</string>
+    <string name="widget_no_trips">Поездок пока нет</string>
+    <string name="widget_trip_details">%1$.1f км · %2$d мин</string>
+    <string name="widget_description">Показывает последнюю поездку</string>
+
     <!-- Misc -->
     <string name="no_data">Нет данных</string>
 </resources>

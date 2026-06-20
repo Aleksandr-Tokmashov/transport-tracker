@@ -21,4 +21,14 @@ object Constants {
 
     // Trips older than this at service restore time are considered abandoned and deleted
     const val MAX_TRIP_DURATION_MS = 4 * 60 * 60 * 1000L
+
+    // Trip completion notification
+    const val TRIP_DONE_CHANNEL_ID = "trip_done_channel"
+    const val TRIP_DONE_NOTIFICATION_ID = 2
+
+    // SharedPreferences for home-screen widget
+    const val WIDGET_PREFS = "widget_prefs"
+    const val WIDGET_KEY_TYPE = "last_trip_type"
+    const val WIDGET_KEY_DISTANCE = "last_trip_distance_m"
+    const val WIDGET_KEY_DURATION = "last_trip_duration_ms"
 }

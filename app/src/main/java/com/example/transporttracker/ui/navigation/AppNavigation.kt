@@ -119,9 +119,11 @@ fun AppNavigation() {
             ) {
                 val viewModel: MapViewModel = hiltViewModel()
                 val points by viewModel.points.collectAsStateWithLifecycle()
+                val summary by viewModel.summary.collectAsStateWithLifecycle()
 
                 TripMapScreen(
                     points = points,
+                    summary = summary,
                     onBack = { navController.popBackStack() }
                 )
             }

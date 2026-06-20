@@ -3,12 +3,18 @@ package com.example.transporttracker.service
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.location.Location
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.example.transporttracker.MainActivity
+import com.example.transporttracker.widget.TripWidgetProvider
 import com.example.transporttracker.R
 import com.example.transporttracker.data.local.entity.GpsPointEntity
 import com.example.transporttracker.data.local.entity.TripEntity
@@ -437,7 +443,65 @@ class LocationTrackingService : Service() {
             Log.d("TRIP_DEBUG", "Trip finished with ${completedSegments.size} segment(s): $primaryTransport")
         }
 
+        postTripCompletedNotification(primaryTransport, overallAvgSpeed, totalDistanceMeters, endTime - tripStartTime)
+        updateWidgetData(primaryTransport, totalDistanceMeters, endTime - tripStartTime)
+
         resetTrip()
+    }
+
+    private fun postTripCompletedNotification(
+        type: TransportType,
+        avgSpeedMps: Float,
+        distanceMeters: Float,
+        durationMs: Long
+    ) {
+        val nm = getSystemService(NotificationManager::class.java)
+
+        val channel = NotificationChannel(
+            Constants.TRIP_DONE_CHANNEL_ID,
+            getString(R.string.notification_trip_done_channel),
+            NotificationManager.IMPORTANCE_DEFAULT
+        )
+        nm.createNotificationChannel(channel)
+
+        val km = distanceMeters / 1000f
+        val minutes = (durationMs / 60_000L).toInt()
+        val text = getString(
+            R.string.notification_trip_done_text,
+            getString(type.nameResId()),
+            km,
+            minutes
+        )
+
+        val tapIntent = PendingIntent.getActivity(
+            this, 0,
+            Intent(this, MainActivity::class.java),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(this, Constants.TRIP_DONE_CHANNEL_ID)
+            .setContentTitle(getString(R.string.notification_trip_done_title))
+            .setContentText(text)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setAutoCancel(true)
+            .setContentIntent(tapIntent)
+            .build()
+
+        nm.notify(Constants.TRIP_DONE_NOTIFICATION_ID, notification)
+    }
+
+    private fun updateWidgetData(type: TransportType, distanceMeters: Float, durationMs: Long) {
+        getSharedPreferences(Constants.WIDGET_PREFS, Context.MODE_PRIVATE).edit()
+            .putString(Constants.WIDGET_KEY_TYPE, getString(type.nameResId()))
+            .putFloat(Constants.WIDGET_KEY_DISTANCE, distanceMeters)
+            .putLong(Constants.WIDGET_KEY_DURATION, durationMs)
+            .apply()
+
+        val ids = AppWidgetManager.getInstance(this)
+            .getAppWidgetIds(ComponentName(this, TripWidgetProvider::class.java))
+        if (ids.isNotEmpty()) {
+            TripWidgetProvider.updateAll(this)
+        }
     }
 
     private fun resetTrip() {

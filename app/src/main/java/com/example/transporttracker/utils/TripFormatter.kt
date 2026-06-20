@@ -30,7 +30,8 @@ class TripFormatter @Inject constructor(
 
     @SuppressLint("DefaultLocale")
     fun formatSpeed(speedMps: Float): String {
-        val kmh = speedMps * 3.6f
+        if (speedMps <= 0f) return context.getString(R.string.no_data)
+        val kmh = (speedMps * 3.6f).coerceAtMost(120f)
         return context.getString(R.string.speed_kmh, kmh)
     }
 

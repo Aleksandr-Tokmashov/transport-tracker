@@ -20,7 +20,7 @@ import com.example.transporttracker.data.local.entity.TripSegmentEntity
         PatternEntity::class,
         TripSegmentEntity::class
     ],
-    version = 3
+    version = 4
 )
 abstract class AppDatabase : RoomDatabase() {
 
@@ -49,6 +49,18 @@ abstract class AppDatabase : RoomDatabase() {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL(
                     "ALTER TABLE trips ADD COLUMN distanceMeters REAL NOT NULL DEFAULT 0"
+                )
+            }
+        }
+
+        // Retroactively reclassify BUS trips at metro-level speed (10–33 m/s = 36–120 km/h).
+        // The upper bound excludes pre-filter GPS spike data.
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    "UPDATE trips SET transportType = 'METRO' " +
+                    "WHERE transportType = 'BUS' " +
+                    "AND averageSpeed > 10.0 AND averageSpeed < 33.3"
                 )
             }
         }

@@ -35,4 +35,7 @@ interface TripDao {
 
     @Update
     suspend fun updateTrip(trip: TripEntity)
+
+    @Query("SELECT * FROM trips WHERE id = :tripId")
+    suspend fun getTripById(tripId: Long): TripEntity?
 }

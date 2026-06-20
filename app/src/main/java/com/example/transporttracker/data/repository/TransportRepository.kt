@@ -59,6 +59,8 @@ class TransportRepository @Inject constructor(
         tripDao.updateTransportType(tripId, type.name)
     }
 
+    suspend fun getTripById(tripId: Long): TripEntity? = tripDao.getTripById(tripId)
+
     suspend fun insertSegment(segment: TripSegmentEntity) {
         segmentDao.insertSegment(segment)
     }

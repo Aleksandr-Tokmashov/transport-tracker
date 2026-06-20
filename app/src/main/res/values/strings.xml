@@ -77,6 +77,20 @@
     <string name="pattern_transport_walk">you mostly walk</string>
     <string name="pattern_transport_other">you mostly use public transport</string>
 
+    <!-- Trip completion notification -->
+    <string name="notification_trip_done_channel">Trip Summary</string>
+    <string name="notification_trip_done_title">Trip completed</string>
+    <string name="notification_trip_done_text">%1$s · %2$.1f km · %3$d min</string>
+
+    <!-- MapScreen stats bar -->
+    <string name="map_stats_speed">%d km/h</string>
+
+    <!-- Home screen widget -->
+    <string name="widget_label">Last trip</string>
+    <string name="widget_no_trips">No trips yet</string>
+    <string name="widget_trip_details">%1$.1f km · %2$d min</string>
+    <string name="widget_description">Shows your last trip</string>
+
     <!-- Misc -->
     <string name="no_data">No data</string>
 </resources>
