@@ -60,43 +60,42 @@ fun TripMapScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.map_route_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.back)
-                        )
+            Column {
+                TopAppBar(
+                    title = { Text(stringResource(R.string.map_route_title)) },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.back)
+                            )
+                        }
                     }
+                )
+                if (summary != null) {
+                    TripStatsBar(summary = summary)
                 }
-            )
+            }
         }
     ) { padding ->
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            if (summary != null) {
-                TripStatsBar(summary = summary)
+        if (points.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(stringResource(R.string.no_gps_data))
             }
-
-            if (points.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(stringResource(R.string.no_gps_data))
-                }
-            } else {
-                androidx.compose.ui.viewinterop.AndroidView(
-                    factory = { mapView },
-                    modifier = Modifier.weight(1f).fillMaxWidth(),
-                    update = { map -> drawTrack(map, points) }
-                )
-            }
+        } else {
+            androidx.compose.ui.viewinterop.AndroidView(
+                factory = { mapView },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                update = { map -> drawTrack(map, points) }
+            )
         }
     }
 }
