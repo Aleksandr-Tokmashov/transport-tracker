@@ -8,7 +8,15 @@ data class AnalyticsUiState(
     val mostUsedTransport: String = "",
     val insights: List<AnalyticsInsight> = emptyList(),
     val transportShares: List<TransportShare> = emptyList(),
-    val timeBinCounts: List<TimeBinCount> = emptyList()
+    val timeBinCounts: List<TimeBinCount> = emptyList(),
+    val weekStats: PeriodStats = PeriodStats(),
+    val monthStats: PeriodStats = PeriodStats()
+)
+
+data class PeriodStats(
+    val tripCount: Int = 0,
+    val distanceKm: Float = 0f,
+    val durationMin: Long = 0L
 )
 
 data class AnalyticsInsight(

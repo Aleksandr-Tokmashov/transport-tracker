@@ -91,6 +91,13 @@
     <string name="widget_trip_details">%1$.1f km · %2$d min</string>
     <string name="widget_description">Shows your last trip</string>
 
+    <!-- Analytics period stats -->
+    <string name="analytics_period_title">By period</string>
+    <string name="analytics_week">This week</string>
+    <string name="analytics_month">Last 30 days</string>
+    <string name="analytics_period_trips">%d trips</string>
+    <string name="analytics_period_detail">%1$.0f km · %2$d min</string>
+
     <!-- Misc -->
     <string name="no_data">No data</string>
 </resources>

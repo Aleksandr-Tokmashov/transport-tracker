@@ -20,13 +20,16 @@ class AnalyticsViewModel @Inject constructor(
         .getAllTrips()
         .map { trips ->
             val patterns = generator.generatePatterns(trips)
+            val now = System.currentTimeMillis()
             AnalyticsUiState(
                 totalTrips = trips.size,
                 totalDistanceKm = generator.getTotalDistanceKm(trips),
                 mostUsedTransport = generator.getMostUsedTransport(trips),
                 insights = patterns.map { AnalyticsInsight(text = it.text, count = it.count) },
                 transportShares = generator.getTransportShares(trips),
-                timeBinCounts = generator.getTimeBinCounts(trips)
+                timeBinCounts = generator.getTimeBinCounts(trips),
+                weekStats = generator.getPeriodStats(trips, now - 7L * 24 * 60 * 60 * 1000),
+                monthStats = generator.getPeriodStats(trips, now - 30L * 24 * 60 * 60 * 1000)
             )
         }
         .stateIn(

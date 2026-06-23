@@ -6,6 +6,8 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
+import android.graphics.Color
 import android.widget.RemoteViews
 import com.example.transporttracker.MainActivity
 import com.example.transporttracker.R
@@ -45,6 +47,14 @@ class TripWidgetProvider : AppWidgetProvider() {
             val durationMs = prefs.getLong(Constants.WIDGET_KEY_DURATION, 0L)
 
             val views = RemoteViews(context.packageName, R.layout.widget_trip)
+
+            val isDark = (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+                Configuration.UI_MODE_NIGHT_YES
+            val primaryColor = if (isDark) Color.WHITE else Color.parseColor("#212121")
+            val secondaryColor = if (isDark) Color.parseColor("#AAAAAA") else Color.parseColor("#757575")
+            views.setTextColor(R.id.widget_label, secondaryColor)
+            views.setTextColor(R.id.widget_type, primaryColor)
+            views.setTextColor(R.id.widget_details, secondaryColor)
 
             if (typeName != null) {
                 views.setTextViewText(R.id.widget_type, typeName)

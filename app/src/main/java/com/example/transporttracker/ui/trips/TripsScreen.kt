@@ -1,5 +1,6 @@
 package com.example.transporttracker.ui.trips
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,13 +10,21 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -23,14 +32,21 @@ import androidx.compose.ui.unit.dp
 import com.example.transporttracker.R
 import com.example.transporttracker.domain.model.TransportType
 import com.example.transporttracker.ui.components.TripCard
+import com.example.transporttracker.ui.components.localizedName
 
 @Composable
 fun TripsScreen(
     trips: List<TripUiState>,
+    availableFilters: Set<TransportType> = emptySet(),
+    selectedFilter: TransportType? = null,
+    onFilterChange: (TransportType?) -> Unit = {},
     onTripClick: (Long) -> Unit = {},
     onCorrectType: (Long, TransportType) -> Unit = { _, _ -> },
-    onExport: () -> Unit = {}
+    onExportCsv: () -> Unit = {},
+    onExportGpx: () -> Unit = {}
 ) {
+    var menuExpanded by remember { mutableStateOf(false) }
+
     Column(modifier = Modifier.fillMaxSize()) {
 
         Row(
@@ -41,17 +57,49 @@ fun TripsScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = if (trips.isEmpty())
+                text = if (trips.isEmpty() && selectedFilter == null)
                     stringResource(R.string.nav_trips)
                 else
                     stringResource(R.string.trips_header_count, trips.size),
                 style = MaterialTheme.typography.titleLarge
             )
-            if (trips.isNotEmpty()) {
-                IconButton(onClick = onExport) {
-                    Icon(
-                        imageVector = Icons.Default.Share,
-                        contentDescription = stringResource(R.string.export_cd)
+            if (availableFilters.isNotEmpty()) {
+                Box {
+                    IconButton(onClick = { menuExpanded = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = stringResource(R.string.export_cd)
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("CSV") },
+                            onClick = { menuExpanded = false; onExportCsv() }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("GPX") },
+                            onClick = { menuExpanded = false; onExportGpx() }
+                        )
+                    }
+                }
+            }
+        }
+
+        if (availableFilters.isNotEmpty()) {
+            Row(
+                modifier = Modifier
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 12.dp, vertical = 2.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                availableFilters.sortedBy { it.name }.forEach { type ->
+                    FilterChip(
+                        selected = selectedFilter == type,
+                        onClick = { onFilterChange(type) },
+                        label = { Text(type.localizedName()) }
                     )
                 }
             }

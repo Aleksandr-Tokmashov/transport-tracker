@@ -80,10 +80,12 @@ fun AppNavigation() {
             composable(Screen.Trips.route) {
                 val viewModel: TripsViewModel = hiltViewModel()
                 val trips by viewModel.trips.collectAsStateWithLifecycle()
+                val availableTypes by viewModel.availableTypes.collectAsStateWithLifecycle()
+                val filterType by viewModel.filterType.collectAsStateWithLifecycle()
                 val context = LocalContext.current
                 val chooserTitle = stringResource(R.string.export_chooser_title)
 
-                LaunchedEffect(viewModel) {
+                LaunchedEffect("csv", viewModel) {
                     viewModel.exportEvent.collect { uri ->
                         val intent = Intent(Intent.ACTION_SEND).apply {
                             type = "text/csv"
@@ -94,15 +96,30 @@ fun AppNavigation() {
                     }
                 }
 
+                LaunchedEffect("gpx", viewModel) {
+                    viewModel.exportGpxEvent.collect { uri ->
+                        val intent = Intent(Intent.ACTION_SEND).apply {
+                            type = "application/gpx+xml"
+                            putExtra(Intent.EXTRA_STREAM, uri)
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                        context.startActivity(Intent.createChooser(intent, chooserTitle))
+                    }
+                }
+
                 TripsScreen(
                     trips = trips,
+                    availableFilters = availableTypes,
+                    selectedFilter = filterType,
+                    onFilterChange = { viewModel.setFilter(it) },
                     onTripClick = { tripId ->
                         navController.navigate(Screen.TripMap.createRoute(tripId))
                     },
                     onCorrectType = { tripId, type ->
                         viewModel.correctTripType(tripId, type)
                     },
-                    onExport = { viewModel.exportTrips() }
+                    onExportCsv = { viewModel.exportTrips() },
+                    onExportGpx = { viewModel.exportGpx() }
                 )
             }
 

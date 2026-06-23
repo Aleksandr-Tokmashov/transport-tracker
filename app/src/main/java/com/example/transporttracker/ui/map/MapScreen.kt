@@ -31,10 +31,16 @@ import com.example.transporttracker.R
 import com.example.transporttracker.data.local.entity.GpsPointEntity
 import com.example.transporttracker.ui.components.color
 import com.example.transporttracker.ui.components.icon
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.drawable.BitmapDrawable
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -151,13 +157,43 @@ private fun StatItem(label: String, bold: Boolean = false) {
 
 private fun drawTrack(mapView: MapView, points: List<GpsPointEntity>) {
     val geoPoints = points.map { GeoPoint(it.latitude, it.longitude) }
+    val ctx = mapView.context
 
     mapView.overlays.clear()
     mapView.overlays.add(Polyline().apply { setPoints(geoPoints) })
+
+    mapView.overlays.add(Marker(mapView).apply {
+        position = geoPoints.first()
+        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+        icon = makeMarkerIcon(ctx, "A", Color.parseColor("#4CAF50"))
+        infoWindow = null
+    })
+    mapView.overlays.add(Marker(mapView).apply {
+        position = geoPoints.last()
+        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+        icon = makeMarkerIcon(ctx, "B", Color.parseColor("#E53935"))
+        infoWindow = null
+    })
 
     val midLat = geoPoints.map { it.latitude }.average()
     val midLon = geoPoints.map { it.longitude }.average()
     mapView.controller.setZoom(15.0)
     mapView.controller.setCenter(GeoPoint(midLat, midLon))
     mapView.invalidate()
+}
+
+private fun makeMarkerIcon(context: android.content.Context, letter: String, color: Int): BitmapDrawable {
+    val dp = context.resources.displayMetrics.density
+    val size = (36 * dp).toInt()
+    val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    paint.color = color
+    canvas.drawCircle(size / 2f, size / 2f, size / 2f - 1, paint)
+    paint.color = Color.WHITE
+    paint.textAlign = Paint.Align.CENTER
+    paint.textSize = size * 0.45f
+    paint.isFakeBoldText = true
+    canvas.drawText(letter, size / 2f, size / 2f - (paint.descent() + paint.ascent()) / 2f, paint)
+    return BitmapDrawable(context.resources, bitmap)
 }

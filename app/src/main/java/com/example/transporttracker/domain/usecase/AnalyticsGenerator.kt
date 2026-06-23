@@ -5,6 +5,7 @@ import com.example.transporttracker.R
 import com.example.transporttracker.domain.model.AnalyticsPattern
 import com.example.transporttracker.domain.model.TransportType
 import com.example.transporttracker.domain.model.Trip
+import com.example.transporttracker.ui.analytics.PeriodStats
 import com.example.transporttracker.ui.analytics.TimeBinCount
 import com.example.transporttracker.ui.analytics.TransportShare
 import com.example.transporttracker.ui.components.localizedName
@@ -62,6 +63,15 @@ class AnalyticsGenerator @Inject constructor(
 
     fun getTotalDistanceKm(trips: List<Trip>): Float =
         trips.sumOf { it.distanceMeters.toDouble() }.toFloat() / 1000f
+
+    fun getPeriodStats(trips: List<Trip>, cutoffMs: Long): PeriodStats {
+        val filtered = trips.filter { it.startTime >= cutoffMs }
+        return PeriodStats(
+            tripCount = filtered.size,
+            distanceKm = filtered.sumOf { it.distanceMeters.toDouble() }.toFloat() / 1000f,
+            durationMin = filtered.sumOf { it.endTime - it.startTime } / 60_000L
+        )
+    }
 
     fun getTransportShares(trips: List<Trip>): List<TransportShare> {
         val byType = trips

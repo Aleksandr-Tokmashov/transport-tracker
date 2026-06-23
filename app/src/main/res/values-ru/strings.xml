@@ -91,6 +91,13 @@
     <string name="widget_trip_details">%1$.1f км · %2$d мин</string>
     <string name="widget_description">Показывает последнюю поездку</string>
 
+    <!-- Analytics period stats -->
+    <string name="analytics_period_title">По периодам</string>
+    <string name="analytics_week">Неделя</string>
+    <string name="analytics_month">30 дней</string>
+    <string name="analytics_period_trips">%d поездок</string>
+    <string name="analytics_period_detail">%1$.0f км · %2$d мин</string>
+
     <!-- Misc -->
     <string name="no_data">Нет данных</string>
 </resources>
