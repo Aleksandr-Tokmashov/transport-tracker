@@ -19,6 +19,8 @@ class TripDetector {
 
     private var potentialStartTime = -1L
 
+    fun movementStartTime(): Long = potentialStartTime
+
     private var lastMovingTime = 0L
 
     fun process(

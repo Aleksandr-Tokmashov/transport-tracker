@@ -108,6 +108,17 @@ class LocationTrackingService : Service() {
         val savedToDb: Boolean = false
     )
 
+    private data class BufferedPoint(
+        val timestamp: Long,
+        val latitude: Double,
+        val longitude: Double,
+        val speed: Float,
+        val accuracy: Float
+    )
+
+    private val preTripBuffer = ArrayDeque<BufferedPoint>()
+    private val PRE_TRIP_BUFFER_MS = 120_000L
+
     // -------------------------------------------------------------------------
 
     override fun onCreate() {
@@ -243,6 +254,17 @@ class LocationTrackingService : Service() {
                         // GPS accuracy tracking also lives here now
                         handleGpsSignal(location)
 
+                        // Buffer points before trip is confirmed for retroactive flush on TripStarted
+                        if (!tripDetector.isTripActive()) {
+                            preTripBuffer.addLast(
+                                BufferedPoint(timestamp, location.latitude, location.longitude, speed, location.accuracy)
+                            )
+                            val cutoff = timestamp - PRE_TRIP_BUFFER_MS
+                            while (preTripBuffer.isNotEmpty() && preTripBuffer.first().timestamp < cutoff) {
+                                preTripBuffer.removeFirst()
+                            }
+                        }
+
                         val event = tripDetector.process(
                             speedKmh = speed * 3.6f,
                             timestamp = timestamp
@@ -251,7 +273,7 @@ class LocationTrackingService : Service() {
                         when (event) {
                             TripEvent.TripStarted -> {
                                 Log.d("TRIP_DEBUG", "TRIP STARTED")
-                                startTrip(timestamp)
+                                startTrip(timestamp, tripDetector.movementStartTime())
                             }
                             TripEvent.TripEnded -> {
                                 Log.d("TRIP_DEBUG", "TRIP ENDED")
@@ -338,10 +360,13 @@ class LocationTrackingService : Service() {
         }
     }
 
-    private suspend fun startTrip(startTime: Long) {
+    private suspend fun startTrip(confirmedTime: Long, movementStartTime: Long) {
 
-        tripStartTime = startTime
-        segmentStartTime = startTime
+        // Backdate trip to when movement first began, not when the 60-s window closed
+        val actualStart = if (movementStartTime > 0L) movementStartTime else confirmedTime
+
+        tripStartTime = actualStart
+        segmentStartTime = actualStart
         speedSamples.clear()
         transportSamples.clear()
         completedSegments.clear()
@@ -354,7 +379,7 @@ class LocationTrackingService : Service() {
         // endTime = 0 marks the trip as active; used for restart recovery
         currentTripId = repository.insertTrip(
             TripEntity(
-                startTime = startTime,
+                startTime = actualStart,
                 endTime = 0L,
                 transportType = "UNKNOWN",
                 averageSpeed = 0f,
@@ -363,7 +388,25 @@ class LocationTrackingService : Service() {
             )
         )
 
-        Log.d("TRIP_DEBUG", "Trip created id=$currentTripId")
+        Log.d("TRIP_DEBUG", "Trip created id=$currentTripId actualStart=$actualStart confirmedAt=$confirmedTime")
+
+        // Flush buffered pre-trip GPS points (exclude current tick — saveGpsPoint handles it)
+        val tripId = currentTripId ?: return
+        preTripBuffer
+            .filter { it.timestamp >= actualStart && it.timestamp < confirmedTime }
+            .forEach { pt ->
+                repository.insertGpsPoint(
+                    GpsPointEntity(
+                        timestamp = pt.timestamp,
+                        latitude = pt.latitude,
+                        longitude = pt.longitude,
+                        speed = pt.speed,
+                        accuracy = pt.accuracy,
+                        tripId = tripId
+                    )
+                )
+            }
+        preTripBuffer.clear()
     }
 
     // Finalises the in-progress segment, stores it in completedSegments, and
@@ -517,6 +560,7 @@ class LocationTrackingService : Service() {
         transportSamples.clear()
         completedSegments.clear()
         transferPauseStart = 0L
+        preTripBuffer.clear()
         getSystemService(NotificationManager::class.java)
             .notify(Constants.NOTIFICATION_ID, buildNotification())
     }
