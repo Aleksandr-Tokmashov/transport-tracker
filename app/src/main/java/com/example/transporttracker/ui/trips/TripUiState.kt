@@ -13,5 +13,8 @@ data class TripUiState(
     val segments: List<String> = emptyList(),
     val transportTypeEnum: TransportType = TransportType.UNKNOWN,
     val segmentTypes: List<TransportType> = emptyList(),
-    val distance: String = ""
+    val distance: String = "",
+    // non-zero when this card represents a single segment of a multi-leg trip
+    val segmentStartTime: Long = 0L,
+    val segmentEndTime: Long = 0L
 )

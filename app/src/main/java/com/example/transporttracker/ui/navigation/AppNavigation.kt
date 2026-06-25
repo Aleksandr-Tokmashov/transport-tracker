@@ -112,8 +112,10 @@ fun AppNavigation() {
                     availableFilters = availableTypes,
                     selectedFilter = filterType,
                     onFilterChange = { viewModel.setFilter(it) },
-                    onTripClick = { tripId ->
-                        navController.navigate(Screen.TripMap.createRoute(tripId))
+                    onTripClick = { trip ->
+                        navController.navigate(
+                            Screen.TripMap.createRoute(trip.id, trip.segmentStartTime, trip.segmentEndTime)
+                        )
                     },
                     onCorrectType = { tripId, type ->
                         viewModel.correctTripType(tripId, type)
@@ -132,7 +134,11 @@ fun AppNavigation() {
 
             composable(
                 route = Screen.TripMap.route,
-                arguments = listOf(navArgument("tripId") { type = NavType.LongType })
+                arguments = listOf(
+                    navArgument("tripId") { type = NavType.LongType },
+                    navArgument("startTime") { type = NavType.LongType; defaultValue = 0L },
+                    navArgument("endTime") { type = NavType.LongType; defaultValue = 0L }
+                )
             ) {
                 val viewModel: MapViewModel = hiltViewModel()
                 val points by viewModel.points.collectAsStateWithLifecycle()

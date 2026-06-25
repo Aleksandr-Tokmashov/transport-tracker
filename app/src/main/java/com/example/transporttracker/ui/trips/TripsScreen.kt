@@ -40,7 +40,7 @@ fun TripsScreen(
     availableFilters: Set<TransportType> = emptySet(),
     selectedFilter: TransportType? = null,
     onFilterChange: (TransportType?) -> Unit = {},
-    onTripClick: (Long) -> Unit = {},
+    onTripClick: (TripUiState) -> Unit = {},
     onCorrectType: (Long, TransportType) -> Unit = { _, _ -> },
     onExportCsv: () -> Unit = {},
     onExportGpx: () -> Unit = {}
@@ -117,10 +117,10 @@ fun TripsScreen(
             }
         } else {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(items = trips, key = { it.id }) { trip ->
+                items(items = trips, key = { "${it.id}_${it.segmentStartTime}" }) { trip ->
                     TripCard(
                         trip = trip,
-                        onTripClick = { onTripClick(trip.id) },
+                        onTripClick = { onTripClick(trip) },
                         onCorrectType = { type -> onCorrectType(trip.id, type) }
                     )
                 }

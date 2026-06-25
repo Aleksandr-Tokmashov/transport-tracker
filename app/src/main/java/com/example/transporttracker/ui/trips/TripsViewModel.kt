@@ -32,7 +32,7 @@ class TripsViewModel @Inject constructor(
     val filterType: StateFlow<TransportType?> = _filterType
 
     private val allMappedTrips = repository.getAllTrips()
-        .map { trips -> trips.map { tripUiMapper.map(it) } }
+        .map { trips -> trips.flatMap { tripUiMapper.mapToCards(it) } }
         .shareIn(viewModelScope, SharingStarted.WhileSubscribed(5000), replay = 1)
 
     val availableTypes: StateFlow<Set<TransportType>> = allMappedTrips

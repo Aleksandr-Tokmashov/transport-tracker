@@ -2,6 +2,7 @@ package com.example.transporttracker.utils
 
 import android.content.Context
 import com.example.transporttracker.domain.model.Trip
+import com.example.transporttracker.domain.model.TransportType
 import com.example.transporttracker.ui.components.localizedName
 import com.example.transporttracker.ui.trips.TripUiState
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -26,4 +27,28 @@ class TripUiMapper @Inject constructor(
         segmentTypes = trip.segments.map { it.transportType },
         distance = if (trip.distanceMeters > 0f) formatter.formatDistance(trip.distanceMeters) else ""
     )
+
+    // Returns one card per meaningful transport segment; falls back to a single
+    // card for the whole trip when there are fewer than two non-walk legs.
+    fun mapToCards(trip: Trip): List<TripUiState> {
+        val legs = trip.segments.filter {
+            it.transportType != TransportType.WALK && it.transportType != TransportType.UNKNOWN
+        }
+        if (legs.size < 2) return listOf(map(trip))
+
+        return legs.map { seg ->
+            TripUiState(
+                id = trip.id,
+                date = formatter.formatDate(seg.startTime),
+                startTime = formatter.formatTimeOnly(seg.startTime),
+                endTime = formatter.formatTimeOnly(seg.endTime),
+                duration = formatter.formatDuration(seg.startTime, seg.endTime),
+                transportType = seg.transportType.localizedName(context),
+                averageSpeed = formatter.formatSpeed(seg.averageSpeed),
+                transportTypeEnum = seg.transportType,
+                segmentStartTime = seg.startTime,
+                segmentEndTime = seg.endTime
+            )
+        }
+    }
 }
